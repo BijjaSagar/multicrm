@@ -88,12 +88,12 @@ export async function GET() {
       },
       recentLeads,
       topDeals: recentDeals,
-      pipeline: pipelineStages.map((stage) => ({
+      pipeline: pipelineStages.map((stage: any) => ({
         id: stage.id,
         name: stage.name,
         color: stage.color,
         dealCount: stage._count.deals,
-        totalValue: stage.deals.reduce((sum, d) => sum + Number(d.value), 0),
+        totalValue: stage.deals.reduce((sum: number, d: any) => sum + Number(d.value), 0),
       })),
       ticketsByPriority: ticketStats,
     })

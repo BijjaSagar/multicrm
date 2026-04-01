@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { 
   BarChart3, MessageSquare, Zap, Globe, Shield, Users, 
   ArrowRight, CheckCircle2, PlayCircle, Star, Menu, X,
-  Github, Twitter, Linkedin, Facebook
+  Github as GithubIcon, MessageCircle, ExternalLink, Mail
 } from 'lucide-react'
 
 // --- Custom Animations Helpers ---
@@ -386,9 +386,10 @@ export default function LandingPage() {
                       Automated, intelligent, and scalable.
                    </p>
                    <div style={{ display: 'flex', gap: '16px', marginTop: '32px' }}>
-                      {[Github, Twitter, Linkedin, Facebook].map((Icon, i) => (
-                        <div key={i} style={{ color: '#94A3B8', cursor: 'pointer' }}><Icon size={20} /></div>
-                      ))}
+                      <div style={{ color: '#94A3B8', cursor: 'pointer' }}><GithubIcon size={20} /></div>
+                      <div style={{ color: '#94A3B8', cursor: 'pointer' }}><MessageCircle size={20} /></div>
+                      <div style={{ color: '#94A3B8', cursor: 'pointer' }}><ExternalLink size={20} /></div>
+                      <div style={{ color: '#94A3B8', cursor: 'pointer' }}><Mail size={20} /></div>
                    </div>
                 </div>
                 {['Platform', 'Resources', 'Company'].map((title, i) => (

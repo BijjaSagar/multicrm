@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     const where: Record<string, unknown> = { tenantId: undefined }
     // Activities are tenant-scoped via the user
     const userIds = await prisma.user.findMany({ where: { tenantId }, select: { id: true } })
-    const ids = userIds.map(u => u.id)
+    const ids = userIds.map((u: { id: string }) => u.id)
 
     const dateFilter: Record<string, unknown> = {}
     if (start) dateFilter.gte = new Date(start)

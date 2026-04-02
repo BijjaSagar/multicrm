@@ -3,8 +3,9 @@
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { AlertCircle, ArrowLeft, RefreshCcw } from 'lucide-react'
+import { Suspense } from 'react'
 
-export default function ErrorPage() {
+function ErrorPageContent() {
   const searchParams = useSearchParams()
   const error = searchParams.get('error')
 
@@ -19,7 +20,7 @@ export default function ErrorPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-max-w-md">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center text-red-500">
           <AlertCircle size={64} />
         </div>
@@ -72,5 +73,17 @@ export default function ErrorPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ErrorPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <RefreshCcw className="animate-spin text-blue-500" size={48} />
+      </div>
+    }>
+      <ErrorPageContent />
+    </Suspense>
   )
 }

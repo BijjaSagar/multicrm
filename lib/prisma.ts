@@ -19,7 +19,7 @@ function createPrismaClient() {
     host: url.hostname,
     port: parseInt(url.port) || 3306,
     user: url.username,
-    password: url.password,
+    password: decodeURIComponent(url.password),
     database: url.pathname.slice(1), // Remove leading /
     connectionLimit: 5,
   })

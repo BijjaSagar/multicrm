@@ -9,7 +9,8 @@ export function middleware(request: NextRequest) {
     request.cookies.get('authjs.session-token')?.value ||
     request.cookies.get('__Secure-authjs.session-token')?.value ||
     request.cookies.get('next-auth.session-token')?.value ||
-    request.cookies.get('__Secure-next-auth.session-token')?.value
+    request.cookies.get('__Secure-next-auth.session-token')?.value ||
+    request.cookies.get('__Host-next-auth.session-token')?.value
 
   const isOnDashboard = pathname.startsWith('/dashboard')
   const isOnAuth = pathname.startsWith('/auth')

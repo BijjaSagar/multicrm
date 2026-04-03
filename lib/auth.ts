@@ -1,7 +1,5 @@
 import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import bcrypt from 'bcryptjs'
-import prisma from '@/lib/prisma'
 import type { NextAuthConfig } from 'next-auth'
 
 declare module 'next-auth' {
@@ -63,6 +61,10 @@ export const authConfig: NextAuthConfig = {
           throw new Error('Email and password are required')
         }
 
+        // Lazy load prisma and bcrypt to keep middleware clean
+        const prisma = (await import('@/lib/prisma')).default
+        const bcrypt = await import('bcryptjs')
+
         const user = await prisma.user.findFirst({
           where: {
             email: credentials.email as string,
@@ -114,7 +116,7 @@ export const authConfig: NextAuthConfig = {
           avatar: user.avatar,
           tenantName: user.tenant.name,
           tenantSlug: user.tenant.slug,
-          enabledModules: [], // Will be filled in JWT callback
+          enabledModules: [], 
         }
       },
     }),
@@ -123,6 +125,7 @@ export const authConfig: NextAuthConfig = {
     async signIn({ user }) {
       if (user) {
         try {
+          const prisma = (await import('@/lib/prisma')).default
           // Log automated attendance start
           await prisma.attendance.create({
             data: {
@@ -170,8 +173,9 @@ export const authConfig: NextAuthConfig = {
         token.tenantName = user.tenantName
         token.tenantSlug = user.tenantSlug
 
-        // Fetch enabled modules for the tenant
+        // Fetch enabled modules for the tenant - LAZY
         try {
+          const prisma = (await import('@/lib/prisma')).default
           const modules = await (prisma as any).tenantModule.findMany({
             where: { 
               tenantId: user.tenantId,

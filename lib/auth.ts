@@ -115,6 +115,43 @@ export const authConfig: NextAuthConfig = {
       },
     }),
   ],
+  events: {
+    async signIn({ user }) {
+      if (user) {
+        try {
+          // Log automated attendance start
+          await prisma.attendance.create({
+            data: {
+              userId: user.id,
+              tenantId: user.tenantId,
+              branchId: user.branchId,
+              status: 'ACTIVE',
+              checkIn: new Date(),
+              metadata: {
+                event: 'LOGIN_AUTO_CHECKIN',
+              },
+            },
+          })
+          
+          // Log to audit logs as well
+          await prisma.auditLog.create({
+            data: {
+              userId: user.id,
+              tenantId: user.tenantId,
+              action: 'LOGIN',
+              entity: 'USER',
+              entityId: user.id,
+              changes: {
+                message: `User logged in and attendance started.`,
+              },
+            },
+          })
+        } catch (error) {
+          console.error('Attendance track error:', error)
+        }
+      }
+    },
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {

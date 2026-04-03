@@ -32,6 +32,7 @@ import {
   Database,
   Send,
   Zap,
+  Clock,
 } from 'lucide-react'
 
 // Theme Context
@@ -77,6 +78,7 @@ const navItems = [
       { name: 'Products', href: '/dashboard/products', icon: Package },
       { name: 'Branches', href: '/dashboard/branches', icon: Building2, roles: ['TENANT_ADMIN', 'SUPER_ADMIN'] },
       { name: 'Team', href: '/dashboard/team', icon: Users },
+      { name: 'Attendance', href: '/dashboard/attendance', icon: Clock },
       { name: 'Email Templates', href: '/dashboard/templates', icon: Mail },
       { name: 'Calendar', href: '/dashboard/calendar', icon: Calendar },
       { name: 'Reports', href: '/dashboard/reports', icon: FileText },

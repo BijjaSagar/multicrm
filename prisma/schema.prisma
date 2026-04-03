@@ -39,6 +39,7 @@ model Tenant {
   tags        Tag[]
   broadcasts  Broadcast[]
   workflows   Workflow[]
+  attendance  Attendance[]
 
   @@map("tenants")
 }
@@ -67,6 +68,7 @@ model Branch {
   deals       Deal[]
   tickets     Ticket[]
   activities  Activity[]
+  attendance  Attendance[]
 
   @@unique([tenantId, code])
   @@map("branches")
@@ -108,6 +110,7 @@ model User {
   auditLogs       AuditLog[]
   sessions        Session[]
   broadcasts      Broadcast[]
+  attendance      Attendance[]
 
   @@unique([tenantId, email])
   @@map("users")
@@ -692,6 +695,32 @@ model Recipient {
   
   @@index([broadcastId, status])
   @@map("broadcast_recipients")
+}
+
+model Attendance {
+  id          String   @id @default(cuid())
+  tenantId    String
+  userId      String
+  branchId    String?
+  checkIn     DateTime @default(now())
+  checkOut    DateTime?
+  duration    Int?     // in minutes
+  ipAddress   String?
+  userAgent   String?
+  status      String   @default("ACTIVE") // ACTIVE, COMPLETED, BREAK
+  notes       String?  @db.Text
+  metadata    Json?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branch      Branch?  @relation(fields: [branchId], references: [id])
+
+  @@index([tenantId, userId])
+  @@index([tenantId, checkIn])
+  @@map("attendance")
 }
 
 // ============================================================

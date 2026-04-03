@@ -31,7 +31,10 @@ interface Deal {
 
 interface PipelineStage { id: string; name: string; color: string; deals: Deal[] }
 
+import { useSession } from 'next-auth/react'
+
 export default function DealsPage() {
+  const { data: session } = useSession()
   const [deals, setDeals] = useState<Deal[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -110,6 +113,7 @@ export default function DealsPage() {
   }
 
   const handleStatusDrop = async (dealId: string, newStageId: string) => {
+    if (session?.user?.role === 'VIEWER') return 
     // Optimistic update
     setDeals(prev => prev.map(d => d.id === dealId ? { ...d, stage: { ...d.stage!, id: newStageId } } : d))
 
@@ -170,7 +174,9 @@ export default function DealsPage() {
             <button className={`btn btn-sm ${viewMode === 'list' ? 'btn-primary' : 'btn-ghost'}`} style={{ borderRadius: 0 }} onClick={() => setViewMode('list')}><List size={14} /> List</button>
           </div>
           <button className="btn btn-secondary btn-sm" onClick={fetchDeals}><RefreshCw size={14} /></button>
-          <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}><Plus size={16} /> Add Deal</button>
+          {session?.user?.role !== 'VIEWER' && (
+            <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}><Plus size={16} /> Add Deal</button>
+          )}
         </div>
       </div>
 
@@ -227,8 +233,11 @@ export default function DealsPage() {
                   {stage.deals.map((deal: Deal) => (
                     <div
                       key={deal.id}
-                      draggable
-                      onDragStart={e => e.dataTransfer.setData('dealId', deal.id)}
+                      draggable={session?.user?.role !== 'VIEWER'}
+                      onDragStart={e => {
+                        if (session?.user?.role === 'VIEWER') return
+                        e.dataTransfer.setData('dealId', deal.id)
+                      }}
                       style={{ padding: '14px', background: 'var(--surface-raised)', borderRadius: '10px', border: '1px solid var(--surface-border)', cursor: 'grab', transition: 'all 150ms' }}
                       onMouseOver={e => { e.currentTarget.style.boxShadow = 'var(--shadow-md)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
                       onMouseOut={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}
@@ -305,8 +314,12 @@ export default function DealsPage() {
                       <div style={{ display: 'flex', gap: '4px' }}>
                         <button className="btn btn-ghost btn-icon btn-sm" onClick={() => handleGeneratePDF(deal)} style={{ color: '#6366F1' }} title="Generate Quotation"><FileDown size={14} /></button>
                         <button className="btn btn-ghost btn-icon btn-sm"><Eye size={14} /></button>
-                        <button className="btn btn-ghost btn-icon btn-sm"><Edit size={14} /></button>
-                        <button className="btn btn-ghost btn-icon btn-sm" onClick={() => handleDelete(deal.id)} style={{ color: '#EF4444' }}><Trash2 size={14} /></button>
+                        {session?.user?.role !== 'VIEWER' && (
+                          <>
+                            <button className="btn btn-ghost btn-icon btn-sm"><Edit size={14} /></button>
+                            <button className="btn btn-ghost btn-icon btn-sm" onClick={() => handleDelete(deal.id)} style={{ color: '#EF4444' }}><Trash2 size={14} /></button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

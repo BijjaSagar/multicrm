@@ -188,7 +188,10 @@ function KanbanColumn({ status, leads }: { status: string; leads: Lead[] }) {
   )
 }
 
+import { useSession } from 'next-auth/react'
+
 export default function LeadsPage() {
+  const { data: session } = useSession()
   const [leads, setLeads] = useState<Lead[]>([])
   const [team, setTeam] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -242,12 +245,14 @@ export default function LeadsPage() {
   }, [leads, searchQuery])
 
   const onDragStart = (event: DragStartEvent) => {
+    if (session?.user?.role === 'VIEWER') return 
     if (event.active.data.current?.type === 'Lead') {
       setActiveLead(event.active.data.current.lead)
     }
   }
 
   const onDragOver = (event: DragOverEvent) => {
+    if (session?.user?.role === 'VIEWER') return 
     const { active, over } = event
     if (!over) return
 
@@ -288,8 +293,9 @@ export default function LeadsPage() {
   }
 
   const onDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event
     setActiveLead(null)
+    if (session?.user?.role === 'VIEWER') return
+    const { active, over } = event
 
     if (!over) return
 
@@ -358,7 +364,9 @@ export default function LeadsPage() {
             />
           </div>
           <button className="btn btn-secondary btn-icon" onClick={fetchLeads}><RefreshCw size={16} /></button>
-          <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}><Plus size={18} /> New Lead</button>
+          {session?.user?.role !== 'VIEWER' && (
+            <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}><Plus size={18} /> New Lead</button>
+          )}
         </div>
       </div>
 

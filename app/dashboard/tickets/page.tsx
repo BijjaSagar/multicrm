@@ -173,7 +173,10 @@ function TicketKanbanColumn({ status, tickets, onClickTicket }: { status: string
   )
 }
 
+import { useSession } from 'next-auth/react'
+
 export default function TicketsPage() {
+  const { data: session } = useSession()
   const [view, setView] = useState<'table' | 'kanban'>('table')
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(true)
@@ -235,12 +238,14 @@ export default function TicketsPage() {
   }, [selectedTicket])
 
   const onDragStart = (event: DragStartEvent) => {
+    if (session?.user?.role === 'VIEWER') return 
     if (event.active.data.current?.type === 'Ticket') {
       setActiveTicket(event.active.data.current.ticket)
     }
   }
 
   const onDragOver = (event: DragOverEvent) => {
+    if (session?.user?.role === 'VIEWER') return 
     const { active, over } = event
     if (!over) return
 
@@ -279,8 +284,9 @@ export default function TicketsPage() {
   }
 
   const onDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event
     setActiveTicket(null)
+    if (session?.user?.role === 'VIEWER') return
+    const { active, over } = event
 
     if (!over) return
 
@@ -366,7 +372,9 @@ export default function TicketsPage() {
             <button className={`btn btn-sm ${view === 'kanban' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setView('kanban')}>Board</button>
           </div>
           <button className="btn btn-secondary btn-icon" onClick={fetchTickets}><RefreshCw size={16} /></button>
-          <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}><Plus size={18} /> New Ticket</button>
+          {session?.user?.role !== 'VIEWER' && (
+            <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}><Plus size={18} /> New Ticket</button>
+          )}
         </div>
       </div>
 

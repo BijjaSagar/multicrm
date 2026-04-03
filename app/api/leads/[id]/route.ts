@@ -9,8 +9,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (!session) return unauthorized()
 
     const { id } = await params
+    const { getRBACWhere, canAccess } = await import('@/lib/rbac')
     const lead = await prisma.lead.findFirst({
-      where: { id, tenantId: session.user.tenantId },
+      where: { id, ...getRBACWhere(session.user, 'Lead') },
       include: {
         assignedTo: { select: { id: true, firstName: true, lastName: true, avatar: true } },
         createdBy: { select: { id: true, firstName: true, lastName: true } },
@@ -36,12 +37,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { id } = await params
     const body = await request.json()
 
+    const { canAccess } = await import('@/lib/rbac')
+
     const existing = await prisma.lead.findFirst({
       where: { id, tenantId: session.user.tenantId },
       include: { tenant: true }
     })
 
     if (!existing) return notFound('Lead not found')
+    if (!canAccess(session.user, 'UPDATE', 'Lead', existing)) return unauthorized('Access Denied')
 
     const updateData: any = { ...body }
     if (body.expectedRevenue) updateData.expectedRevenue = parseFloat(body.expectedRevenue)
@@ -94,11 +98,14 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     if (!session) return unauthorized()
 
     const { id } = await params
+    const { canAccess } = await import('@/lib/rbac')
+
     const existing = await prisma.lead.findFirst({
       where: { id, tenantId: session.user.tenantId }
     })
 
     if (!existing) return notFound('Lead not found')
+    if (!canAccess(session.user, 'DELETE', 'Lead', existing)) return unauthorized('Access Denied')
 
     await prisma.lead.delete({ where: { id } })
     logAudit({ action: 'DELETE', entity: 'Lead', entityId: id })

@@ -9,8 +9,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (!session) return unauthorized()
 
     const { id } = await params
+    const { getRBACWhere, canAccess } = await import('@/lib/rbac')
     const ticket = await prisma.ticket.findFirst({
-      where: { id, tenantId: session.user.tenantId },
+      where: { id, ...getRBACWhere(session.user, 'Ticket') },
       include: {
         contact: true,
         assignedTo: { select: { id: true, firstName: true, lastName: true, avatar: true, email: true } },
@@ -25,6 +26,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!ticket) return notFound('Ticket not found')
+    if (!canAccess(session.user, 'READ', 'Ticket', ticket)) return unauthorized('Access Denied')
     return success(ticket)
   } catch (error) {
     return serverError(error)
@@ -39,8 +41,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { id } = await params
     const body = await request.json()
 
+    const { canAccess } = await import('@/lib/rbac')
     const existing = await prisma.ticket.findFirst({ where: { id, tenantId: session.user.tenantId } })
     if (!existing) return notFound('Ticket not found')
+    if (!canAccess(session.user, 'UPDATE', 'Ticket', existing)) return unauthorized('Access Denied')
 
     const updateData: Record<string, unknown> = { ...body }
     if (body.status === 'RESOLVED') updateData.resolvedAt = new Date()
@@ -69,8 +73,10 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     if (!session) return unauthorized()
 
     const { id } = await params
+    const { canAccess } = await import('@/lib/rbac')
     const existing = await prisma.ticket.findFirst({ where: { id, tenantId: session.user.tenantId } })
     if (!existing) return notFound('Ticket not found')
+    if (!canAccess(session.user, 'DELETE', 'Ticket', existing)) return unauthorized('Access Denied')
 
     await prisma.ticket.delete({ where: { id } })
     logAudit({ action: 'DELETE', entity: 'Ticket', entityId: id })

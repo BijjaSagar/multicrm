@@ -12,12 +12,13 @@ export async function GET(request: NextRequest) {
     const params = parseSearchParams(request.url)
     const { page, limit, search, sortBy, sortOrder, status } = params
     const skip = (page - 1) * limit
-
-    const where: Record<string, unknown> = { tenantId }
-    if (role !== 'SUPER_ADMIN' && role !== 'TENANT_ADMIN' && branchId) {
-      where.branchId = branchId
+    
+    // Build where clause with RBAC
+    const { getRBACWhere } = await import('@/lib/rbac')
+    const where = {
+      ...getRBACWhere(session.user, 'Deal'),
+      ...(status ? { status } : {})
     }
-    if (status) where.status = status
     if (search) {
       where.OR = [
         { title: { contains: search } },

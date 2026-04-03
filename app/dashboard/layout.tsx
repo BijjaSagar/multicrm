@@ -42,37 +42,40 @@ const ThemeContext = createContext({
 
 export const useTheme = () => useContext(ThemeContext)
 
-// Navigation Items
+// Navigation Items with Role-Based Access
 const navItems = [
   {
     section: 'Overview',
     items: [
       { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-      { name: 'Automation', href: '/dashboard/automation', icon: Zap },
-      { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
+      { name: 'Automation', href: '/dashboard/automation', icon: Zap, roles: ['TENANT_ADMIN', 'SUPER_ADMIN', 'BRANCH_MANAGER'] },
+      { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3, roles: ['TENANT_ADMIN', 'SUPER_ADMIN', 'BRANCH_MANAGER', 'SALES_MANAGER', 'SUPPORT_MANAGER'] },
     ],
   },
   {
     section: 'Sales',
+    roles: ['TENANT_ADMIN', 'SUPER_ADMIN', 'BRANCH_MANAGER', 'SALES_MANAGER', 'SALES_REP', 'VIEWER'],
     items: [
       { name: 'Leads', href: '/dashboard/leads', icon: UserPlus },
       { name: 'Contacts', href: '/dashboard/contacts', icon: Users },
       { name: 'Deals', href: '/dashboard/deals', icon: DollarSign },
       { name: 'Pipeline', href: '/dashboard/pipeline', icon: BarChart3 },
-      { name: 'Broadcasts', href: '/dashboard/broadcasts', icon: Send },
+      { name: 'Broadcasts', href: '/dashboard/broadcasts', icon: Send, roles: ['TENANT_ADMIN', 'BRANCH_MANAGER', 'SALES_MANAGER'] },
     ],
   },
   {
     section: 'Support',
+    roles: ['TENANT_ADMIN', 'SUPER_ADMIN', 'BRANCH_MANAGER', 'SUPPORT_MANAGER', 'SUPPORT_AGENT', 'VIEWER'],
     items: [
       { name: 'Tickets', href: '/dashboard/tickets', icon: HeadphonesIcon },
     ],
   },
   {
     section: 'Organization',
+    roles: ['TENANT_ADMIN', 'SUPER_ADMIN', 'BRANCH_MANAGER'],
     items: [
       { name: 'Products', href: '/dashboard/products', icon: Package },
-      { name: 'Branches', href: '/dashboard/branches', icon: Building2 },
+      { name: 'Branches', href: '/dashboard/branches', icon: Building2, roles: ['TENANT_ADMIN', 'SUPER_ADMIN'] },
       { name: 'Team', href: '/dashboard/team', icon: Users },
       { name: 'Email Templates', href: '/dashboard/templates', icon: Mail },
       { name: 'Calendar', href: '/dashboard/calendar', icon: Calendar },
@@ -81,6 +84,7 @@ const navItems = [
   },
   {
     section: 'System',
+    roles: ['TENANT_ADMIN', 'SUPER_ADMIN'],
     items: [
       { name: 'Audit Logs', href: '/dashboard/audit', icon: Database },
       { name: 'Settings', href: '/dashboard/settings', icon: Settings },
@@ -222,12 +226,16 @@ export default function DashboardLayout({
 
         {/* Navigation */}
         <nav className="sidebar-nav">
-          {navItems.map((section) => (
+          {navItems
+            .filter((section: any) => !section.roles || section.roles.includes(user.role))
+            .map((section: any) => (
             <div key={section.section}>
               {!collapsed && (
                 <div className="sidebar-section-title">{section.section}</div>
               )}
-              {section.items.map((item) => {
+              {section.items
+                .filter((item: any) => !item.roles || item.roles.includes(user.role))
+                .map((item: any) => {
                 const isActive = pathname === item.href
                 return (
                   <Link

@@ -34,7 +34,10 @@ const typeColors: Record<string, { bg: string; color: string }> = {
   LEAD: { bg: 'rgba(99, 102, 241, 0.1)', color: '#6366F1' },
 }
 
+import { useSession } from 'next-auth/react'
+
 export default function ContactsPage() {
+  const { data: session } = useSession()
   const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -297,8 +300,12 @@ export default function ContactsPage() {
                     <td>
                       <div style={{ display: 'flex', gap: '4px' }}>
                         <button className="btn btn-ghost btn-icon btn-sm"><Eye size={14} /></button>
-                        <button className="btn btn-ghost btn-icon btn-sm" onClick={() => handleEdit(contact)}><Edit size={14} /></button>
-                        <button className="btn btn-ghost btn-icon btn-sm" onClick={(e) => handleDelete(contact.id, e)} style={{ color: '#EF4444' }}><Trash2 size={14} /></button>
+                        {session?.user?.role !== 'VIEWER' && (
+                           <>
+                             <button className="btn btn-ghost btn-icon btn-sm" onClick={() => handleEdit(contact)}><Edit size={14} /></button>
+                             <button className="btn btn-ghost btn-icon btn-sm" onClick={(e) => handleDelete(contact.id, e)} style={{ color: '#EF4444' }}><Trash2 size={14} /></button>
+                           </>
+                        )}
                       </div>
                     </td>
                   </tr>

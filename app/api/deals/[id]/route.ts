@@ -9,8 +9,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (!session) return unauthorized()
 
     const { id } = await params
+    const { getRBACWhere, canAccess } = await import('@/lib/rbac')
     const deal = await prisma.deal.findFirst({
-      where: { id, tenantId: session.user.tenantId },
+      where: { id, ...getRBACWhere(session.user, 'Deal') },
       include: {
         stage: true,
         pipeline: { include: { stages: { orderBy: { order: 'asc' } } } },
@@ -23,6 +24,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!deal) return notFound('Deal not found')
+    if (!canAccess(session.user, 'READ', 'Deal', deal)) return unauthorized('Access Denied')
     return success(deal)
   } catch (error) {
     return serverError(error)
@@ -39,6 +41,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { id } = await params
     const body = await request.json()
 
+    const { canAccess } = await import('@/lib/rbac')
+
     const existing = await prisma.deal.findFirst({ 
       where: { id, tenantId: session.user.tenantId },
       include: { 
@@ -48,6 +52,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       }
     })
     if (!existing) return notFound('Deal not found')
+    if (!canAccess(session.user, 'UPDATE', 'Deal', existing)) return unauthorized('Access Denied')
 
     const updateData: Record<string, unknown> = { ...body }
     if (body.value) updateData.value = parseFloat(body.value)
@@ -111,8 +116,10 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     if (!session) return unauthorized()
 
     const { id } = await params
+    const { canAccess } = await import('@/lib/rbac')
     const existing = await prisma.deal.findFirst({ where: { id, tenantId: session.user.tenantId } })
     if (!existing) return notFound('Deal not found')
+    if (!canAccess(session.user, 'DELETE', 'Deal', existing)) return unauthorized('Access Denied')
 
     await prisma.deal.delete({ where: { id } })
     logAudit({ action: 'DELETE', entity: 'Deal', entityId: id })

@@ -9,8 +9,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (!session) return unauthorized()
 
     const { id } = await params
+    const { getRBACWhere, canAccess } = await import('@/lib/rbac')
     const contact = await prisma.contact.findFirst({
-      where: { id, tenantId: session.user.tenantId },
+      where: { id, ...getRBACWhere(session.user, 'Contact') },
       include: {
         branch: { select: { id: true, name: true } },
         deals: { include: { stage: true }, orderBy: { createdAt: 'desc' } },
@@ -21,6 +22,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!contact) return notFound('Contact not found')
+    if (!canAccess(session.user, 'READ', 'Contact', contact)) return unauthorized('Access Denied')
     return success(contact)
   } catch (error) {
     return serverError(error)
@@ -35,8 +37,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { id } = await params
     const body = await request.json()
 
+    const { canAccess } = await import('@/lib/rbac')
     const existing = await prisma.contact.findFirst({ where: { id, tenantId: session.user.tenantId } })
     if (!existing) return notFound('Contact not found')
+    if (!canAccess(session.user, 'UPDATE', 'Contact', existing)) return unauthorized('Access Denied')
 
     const contact = await prisma.contact.update({
       where: { id },
@@ -57,8 +61,10 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     if (!session) return unauthorized()
 
     const { id } = await params
+    const { canAccess } = await import('@/lib/rbac')
     const existing = await prisma.contact.findFirst({ where: { id, tenantId: session.user.tenantId } })
     if (!existing) return notFound('Contact not found')
+    if (!canAccess(session.user, 'DELETE', 'Contact', existing)) return unauthorized('Access Denied')
 
     await prisma.contact.delete({ where: { id } })
     logAudit({ action: 'DELETE', entity: 'Contact', entityId: id })

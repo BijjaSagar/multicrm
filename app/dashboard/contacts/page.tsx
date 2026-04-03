@@ -42,7 +42,10 @@ export default function ContactsPage() {
   const [typeFilter, setTypeFilter] = useState('all')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingContact, setEditingContact] = useState<Contact | null>(null)
   const [creating, setCreating] = useState(false)
+  const [updating, setUpdating] = useState(false)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
@@ -65,7 +68,19 @@ export default function ContactsPage() {
     }
   }, [page, searchQuery, typeFilter])
 
-  useEffect(() => { fetchContacts() }, [fetchContacts])
+  useEffect(() => {
+    fetchContacts()
+    // Handle ?edit=id from deep links
+    const params = new URLSearchParams(window.location.search)
+    const editId = params.get('edit')
+    if (editId) {
+      const contactToEdit = contacts.find(c => c.id === editId)
+      if (contactToEdit) {
+        setEditingContact(contactToEdit)
+        setShowEditModal(true)
+      }
+    }
+  }, [fetchContacts, contacts.length]) // Trigger when contacts load
 
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -96,10 +111,52 @@ export default function ContactsPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Delete this contact?')) return
-    await fetch(`/api/contacts/${id}`, { method: 'DELETE' })
-    fetchContacts()
+  const handleDelete = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation()
+    if (!confirm('Are you sure you want to delete this contact? This action cannot be undone.')) return
+    try {
+      const res = await fetch(`/api/contacts/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Failed to delete')
+      fetchContacts()
+    } catch (err) {
+      alert('Error deleting contact')
+    }
+  }
+
+  const handleEdit = (contact: Contact, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation()
+    setEditingContact(contact)
+    setShowEditModal(true)
+  }
+
+  const onUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!editingContact) return
+    setUpdating(true)
+    const form = new FormData(e.currentTarget)
+    try {
+      const res = await fetch(`/api/contacts/${editingContact.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: form.get('firstName'),
+          lastName: form.get('lastName'),
+          email: form.get('email'),
+          phone: form.get('phone'),
+          company: form.get('company'),
+          jobTitle: form.get('jobTitle'),
+          type: form.get('type'),
+          city: form.get('city'),
+        }),
+      })
+      if (!res.ok) throw new Error('Failed to update')
+      setShowEditModal(false)
+      fetchContacts()
+    } catch (err) {
+      alert('Error updating contact')
+    } finally {
+      setUpdating(false)
+    }
   }
 
   return (
@@ -178,7 +235,7 @@ export default function ContactsPage() {
       ) : viewMode === 'grid' ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
           {contacts.map((contact, i) => (
-            <div key={contact.id} className="card animate-fade-in-up" style={{ padding: '20px', cursor: 'pointer', animationDelay: `${i * 60}ms`, animationFillMode: 'backwards' }}>
+            <div key={contact.id} className="card animate-fade-in-up" onClick={() => handleEdit(contact)} style={{ padding: '20px', cursor: 'pointer', animationDelay: `${i * 60}ms`, animationFillMode: 'backwards', transition: 'transform 200ms, box-shadow 200ms' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
                 <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: `linear-gradient(135deg, hsl(${(contact.firstName.charCodeAt(0) * 15) % 360}, 65%, 55%), hsl(${(contact.firstName.charCodeAt(0) * 15 + 40) % 360}, 65%, 45%))`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '16px', fontWeight: 700, flexShrink: 0 }}>
                   {contact.firstName[0]}{contact.lastName[0]}
@@ -195,16 +252,19 @@ export default function ContactsPage() {
                 {contact.city && <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}><MapPin size={14} color="var(--text-muted)" /> {contact.city}{contact.state ? `, ${contact.state}` : ''}</div>}
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '12px', borderTop: '1px solid var(--surface-border)' }}>
-                <div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Deals</div>
-                  <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>{contact._count.deals}</div>
+                <div style={{ display: 'flex', gap: '16px' }}>
+                   <div>
+                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Deals</div>
+                     <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>{contact._count.deals}</div>
+                   </div>
+                   <div>
+                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Tickets</div>
+                     <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>{contact._count.tickets}</div>
+                   </div>
                 </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Tickets</div>
-                  <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>{contact._count.tickets}</div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(contact.id)} style={{ color: '#EF4444' }}><Trash2 size={14} /></button>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                   <button className="btn btn-ghost btn-icon btn-sm" onClick={(e) => handleEdit(contact, e)}><Edit size={14} /></button>
+                   <button className="btn btn-ghost btn-icon btn-sm" onClick={(e) => handleDelete(contact.id, e)} style={{ color: '#EF4444' }}><Trash2 size={14} /></button>
                 </div>
               </div>
             </div>
@@ -237,8 +297,8 @@ export default function ContactsPage() {
                     <td>
                       <div style={{ display: 'flex', gap: '4px' }}>
                         <button className="btn btn-ghost btn-icon btn-sm"><Eye size={14} /></button>
-                        <button className="btn btn-ghost btn-icon btn-sm"><Edit size={14} /></button>
-                        <button className="btn btn-ghost btn-icon btn-sm" onClick={() => handleDelete(contact.id)} style={{ color: '#EF4444' }}><Trash2 size={14} /></button>
+                        <button className="btn btn-ghost btn-icon btn-sm" onClick={() => handleEdit(contact)}><Edit size={14} /></button>
+                        <button className="btn btn-ghost btn-icon btn-sm" onClick={(e) => handleDelete(contact.id, e)} style={{ color: '#EF4444' }}><Trash2 size={14} /></button>
                       </div>
                     </td>
                   </tr>
@@ -282,6 +342,35 @@ export default function ContactsPage() {
                 <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={creating}>
                   {creating ? <><Loader2 size={16} className="spinner" /> Creating...</> : <><Plus size={16} /> Create Contact</>}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Edit Modal */}
+      {showEditModal && editingContact && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }} onClick={() => setShowEditModal(false)}>
+          <div className="card animate-scale-in" style={{ width: '560px', padding: '28px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: 700 }}>Edit Contact</h2>
+              <button className="btn btn-ghost btn-icon" onClick={() => setShowEditModal(false)}><X size={18} /></button>
+            </div>
+            <form onSubmit={onUpdate}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div><label className="label">First Name *</label><input name="firstName" className="input" defaultValue={editingContact.firstName} required /></div>
+                <div><label className="label">Last Name *</label><input name="lastName" className="input" defaultValue={editingContact.lastName} required /></div>
+                <div><label className="label">Email</label><input name="email" className="input" type="email" defaultValue={editingContact.email || ''} /></div>
+                <div><label className="label">Phone</label><input name="phone" className="input" defaultValue={editingContact.phone || ''} /></div>
+                <div><label className="label">Company</label><input name="company" className="input" defaultValue={editingContact.company || ''} /></div>
+                <div><label className="label">Job Title</label><input name="jobTitle" className="input" defaultValue={editingContact.jobTitle || ''} /></div>
+                <div><label className="label">Type</label><select name="type" className="input" defaultValue={editingContact.type}><option value="CUSTOMER">Customer</option><option value="PROSPECT">Prospect</option><option value="PARTNER">Partner</option><option value="VENDOR">Vendor</option></select></div>
+                <div><label className="label">City</label><input name="city" className="input" defaultValue={editingContact.city || ''} /></div>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowEditModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={updating}>
+                  {updating ? <><Loader2 size={16} className="spinner" /> Updating...</> : <><Edit size={16} /> Update Contact</>}
                 </button>
               </div>
             </form>

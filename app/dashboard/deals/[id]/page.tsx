@@ -7,7 +7,7 @@ import {
   Clock, Plus, MoreHorizontal, ArrowLeft, Loader2,
   PhoneCall, Video, CheckCircle2, MessageSquare, 
   TrendingUp, Star, Edit3, Trash2, FileDown, 
-  ChevronRight, Target, ShieldCheck, User
+  ChevronRight, Target, ShieldCheck, User, X, Download
 } from 'lucide-react'
 
 interface Activity {
@@ -106,6 +106,12 @@ export default function DealDetailPage() {
     }
   }
 
+  const [showQuotation, setShowQuotation] = useState(false)
+  
+  const handleGetQuotation = () => {
+    setShowQuotation(true)
+  }
+
   if (loading) return (
     <div style={{ height: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
       <Loader2 size={32} className="spinner" />
@@ -140,7 +146,7 @@ export default function DealDetailPage() {
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
            <button className="btn btn-secondary" onClick={() => setShowLogModal(true)}><Plus size={16} /> Log Call/Task</button>
-           <button className="btn btn-primary"><FileDown size={16} /> Get Quotation</button>
+           <button className="btn btn-primary" onClick={handleGetQuotation}><FileDown size={16} /> Get Quotation</button>
            <button className="btn btn-ghost btn-icon"><MoreHorizontal size={20} /></button>
         </div>
       </div>
@@ -209,10 +215,11 @@ export default function DealDetailPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--surface-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><User size={18} /></div>
-                      <div>
+                      <div style={{ flex: 1 }}>
                         <div style={{ fontSize: '14px', fontWeight: 700 }}>{deal.contact.firstName} {deal.contact.lastName}</div>
                         <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{deal.contact.company}</div>
                       </div>
+                      <button className="btn btn-ghost btn-icon btn-sm" onClick={() => router.push(`/dashboard/contacts?edit=${deal.contact?.id}`)}><Edit3 size={14} /></button>
                    </div>
                    <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '8px', color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Mail size={12} /> {deal.contact.email}</span>
@@ -259,6 +266,104 @@ export default function DealDetailPage() {
               </div>
             </form>
           </div>
+        </div>
+      )}
+      {showQuotation && deal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setShowQuotation(false)}>
+          <div className="card animate-scale-in" style={{ width: '800px', maxHeight: '90vh', overflowY: 'auto', padding: '0', borderRadius: '16px', background: 'var(--surface-bg)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ background: 'linear-gradient(to right, #0F172A, #1E293B)', padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+               <div>
+                  <h2 style={{ color: 'white', fontSize: '20px', fontWeight: 800 }}>Quotation Preview</h2>
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px' }}>Estimate for {deal.title}</p>
+               </div>
+               <div style={{ display: 'flex', gap: '12px' }}>
+                  <button className="btn btn-icon btn-ghost" style={{ color: 'white' }} onClick={() => window.print()}><FileDown size={18} /></button>
+                  <button className="btn btn-icon btn-ghost" style={{ color: 'white' }} onClick={() => setShowQuotation(false)}><X size={18} /></button>
+               </div>
+            </div>
+            
+            <div id="quotation-print" style={{ padding: '60px', background: 'white', color: '#1E293B' }}>
+               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '60px' }}>
+                  <div>
+                    <h1 style={{ fontSize: '28px', fontWeight: 900, marginBottom: '8px' }}>QUOTATION</h1>
+                    <div style={{ fontSize: '14px', color: '#64748B' }}>#{deal.id.slice(-8).toUpperCase()}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontWeight: 800, fontSize: '18px' }}>MultiCRM Pvt Ltd</div>
+                    <div style={{ fontSize: '13px', color: '#64748B' }}>info@multicrm.com<br/>www.multicrm.com</div>
+                  </div>
+               </div>
+
+               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginBottom: '60px' }}>
+                  <div>
+                    <div style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: 800, color: '#94A3B8', marginBottom: '8px' }}>Bill To</div>
+                    <div style={{ fontWeight: 800, fontSize: '15px' }}>{deal.contact?.firstName} {deal.contact?.lastName}</div>
+                    <div style={{ fontSize: '14px', color: '#475569' }}>{deal.contact?.company}</div>
+                    <div style={{ fontSize: '14px', color: '#475569' }}>{deal.contact?.email}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: 800, color: '#94A3B8', marginBottom: '8px' }}>Quotation Details</div>
+                    <div style={{ fontSize: '14px', color: '#475569' }}>Date: **{new Date().toLocaleDateString()}**</div>
+                    <div style={{ fontSize: '14px', color: '#475569' }}>Valid Until: **{new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}**</div>
+                  </div>
+               </div>
+
+               <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '40px' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '2px solid #E2E8F0', paddingBottom: '12px' }}>
+                      <th style={{ textAlign: 'left', padding: '12px 0', fontSize: '12px', textTransform: 'uppercase', color: '#64748B' }}>Description</th>
+                      <th style={{ textAlign: 'right', padding: '12px 0', fontSize: '12px', textTransform: 'uppercase', color: '#64748B' }}>Total Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
+                      <td style={{ padding: '24px 0' }}>
+                         <div style={{ fontWeight: 800, fontSize: '15px', color: '#1E293B' }}>{deal.title}</div>
+                         <div style={{ fontSize: '13px', color: '#64748B', marginTop: '6px' }}>Service implementation and enterprise license with {deal.probability}% probability.</div>
+                      </td>
+                      <td style={{ textAlign: 'right', padding: '24px 0', fontWeight: 800, fontSize: '16px' }}>
+                         {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(deal.value)}
+                      </td>
+                    </tr>
+                  </tbody>
+               </table>
+
+               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <div style={{ width: '240px' }}>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #F1F5F9' }}>
+                        <span style={{ fontSize: '14px', color: '#64748B' }}>Subtotal</span>
+                        <span style={{ fontSize: '14px', fontWeight: 700 }}>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(deal.value)}</span>
+                     </div>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #F1F5F9' }}>
+                        <span style={{ fontSize: '14px', color: '#64748B' }}>Tax (0%)</span>
+                        <span style={{ fontSize: '14px', fontWeight: 700 }}>₹0.00</span>
+                     </div>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', marginTop: '4px' }}>
+                        <span style={{ fontSize: '16px', fontWeight: 900 }}>Total</span>
+                        <span style={{ fontSize: '18px', fontWeight: 900, color: '#3B82F6' }}>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(deal.value)}</span>
+                     </div>
+                  </div>
+               </div>
+
+               <div style={{ marginTop: '100px', borderTop: '1px solid #E2E8F0', paddingTop: '20px' }}>
+                  <div style={{ fontSize: '11px', color: '#94A3B8', textAlign: 'center' }}>
+                     * This is a computer generated quotation and does not require physical signature. *
+                  </div>
+               </div>
+            </div>
+
+            <div style={{ padding: '20px 32px', background: 'var(--surface-raised)', display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid var(--surface-border)' }}>
+               <button className="btn btn-secondary" onClick={() => setShowQuotation(false)}>Close</button>
+               <button className="btn btn-primary" onClick={() => window.print()}><Download size={16} /> Download PDF</button>
+            </div>
+          </div>
+          <style dangerouslySetInnerHTML={{ __html: `
+            @media print {
+              body * { visibility: hidden; }
+              #quotation-print, #quotation-print * { visibility: visible; }
+              #quotation-print { position: fixed; left: 0; top: 0; width: 100%; height: 100%; margin: 0; padding: 40px; }
+            }
+          `}} />
         </div>
       )}
     </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { 
-  Zap, Plus, Trash2, Edit3, Play, Pause, AlertCircle,
+  Zap, Plus, Trash2, Play, Pause, AlertCircle,
   Clock, ArrowRight, ShieldCheck, Loader2, RefreshCw
 } from 'lucide-react'
 
@@ -49,15 +49,38 @@ export default function AutomationPage() {
   }, [fetchWorkflows])
 
   const toggleStatus = async (id: string, currentStatus: string) => {
-     // TODO: Implement toggle API
-     alert('Status toggle would call /api/workflows/[id] PATCH')
+    try {
+      const newStatus = currentStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
+      const res = await fetch(`/api/workflows/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      if (!res.ok) throw new Error('Toggle failed')
+      fetchWorkflows()
+    } catch (err) {
+      alert('Failed to toggle status')
+    }
+  }
+
+  const deleteWorkflow = async (id: string) => {
+    if (!confirm('Delete this automation plan?')) return
+    try {
+      const res = await fetch(`/api/workflows/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Delete failed')
+      fetchWorkflows()
+    } catch (err) {
+      alert('Failed to delete')
+    }
   }
 
   const [showCreate, setShowCreate] = useState(false)
   const [newPlan, setNewPlan] = useState({ name: '', trigger: 'LEAD_CREATED' })
+  const [creating, setCreating] = useState(false)
 
   const createPlan = async () => {
-    if (!newPlan.name) return alert('Please enter a name')
+    if (!newPlan.name) return
+    setCreating(true)
     try {
       const res = await fetch('/api/workflows', {
         method: 'POST',
@@ -65,15 +88,18 @@ export default function AutomationPage() {
         body: JSON.stringify({
           name: newPlan.name,
           triggerType: newPlan.trigger,
-          actions: [{ type: 'NOTIFICATION', config: { message: `New plan: ${newPlan.name} active` } }]
+          actions: [{ type: 'CREATE_NOTIFICATION', config: { message: `New plan: ${newPlan.name} active` } }]
         })
       })
-      if (!res.ok) throw new Error('Create failed')
+      if (!res.ok) throw new Error('Failed to create the automation plan')
       setShowCreate(false)
       setNewPlan({ name: '', trigger: 'LEAD_CREATED' })
       fetchWorkflows()
+      alert('Automation plan activated successfully!')
     } catch (err) {
-      alert('Error creating plan')
+      alert(err instanceof Error ? err.message : 'Error creating plan')
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -111,7 +137,9 @@ export default function AutomationPage() {
                     </div>
                     <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
                         <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setShowCreate(false)}>Cancel</button>
-                        <button className="btn btn-primary" style={{ flex: 1 }} onClick={createPlan}>Activate Plan</button>
+                        <button className="btn btn-primary" style={{ flex: 1 }} onClick={createPlan} disabled={creating || !newPlan.name}>
+                            {creating ? <Loader2 size={16} className="spinner" /> : 'Activate Plan'}
+                        </button>
                     </div>
                  </div>
              </div>
@@ -160,8 +188,7 @@ export default function AutomationPage() {
                         <div style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 800, background: auto.status === 'ACTIVE' ? '#10B98115' : '#6B728015', color: auto.status === 'ACTIVE' ? '#10B981' : '#6B7280' }}>
                           {auto.status}
                         </div>
-                        <button className="btn btn-ghost btn-icon btn-sm"><Edit3 size={14} /></button>
-                        <button className="btn btn-ghost btn-icon btn-sm"><Trash2 size={14} /></button>
+                        <button className="btn btn-ghost btn-icon btn-sm" onClick={() => deleteWorkflow(auto.id)} title="Delete"><Trash2 size={14} /></button>
                     </div>
                   </div>
 

@@ -28,7 +28,10 @@ export default function BranchesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showModal, setShowModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingBranch, setEditingBranch] = useState<Branch | null>(null)
   const [creating, setCreating] = useState(false)
+  const [updating, setUpdating] = useState(false)
 
   const fetchBranches = useCallback(async () => {
     setLoading(true)
@@ -73,10 +76,49 @@ export default function BranchesPage() {
     }
   }
 
+  const handleEdit = (branch: Branch) => {
+    setEditingBranch(branch)
+    setShowEditModal(true)
+  }
+
+  const onUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!editingBranch) return
+    setUpdating(true)
+    const form = new FormData(e.currentTarget)
+    try {
+      const res = await fetch(`/api/branches/${editingBranch.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.get('name'),
+          code: form.get('code'),
+          city: form.get('city'),
+          state: form.get('state'),
+          phone: form.get('phone'),
+          email: form.get('email'),
+          status: form.get('status'),
+        }),
+      })
+      if (!res.ok) throw new Error('Update failed')
+      setShowEditModal(false)
+      fetchBranches()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Update failed')
+    } finally {
+      setUpdating(false)
+    }
+  }
+
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this branch? This will affect all associated data.')) return
-    await fetch(`/api/branches/${id}`, { method: 'DELETE' })
-    fetchBranches()
+    if (!confirm('Delete this branch? Associated data will be disconnected or removed.')) return
+    try {
+      const res = await fetch(`/api/branches/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Delete failed')
+      fetchBranches()
+    } catch (err) {
+      alert('Error: Could not delete this branch. It may have associated users or data.')
+    }
   }
 
   const totalUsers = branches.reduce((s, b) => s + b._count.users, 0)
@@ -171,11 +213,12 @@ export default function BranchesPage() {
                 ))}
               </div>
 
-              {!branch.isHeadquarters && (
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
-                  <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(branch.id)} style={{ color: '#EF4444', fontSize: '12px' }}><Trash2 size={14} /> Remove</button>
-                </div>
-              )}
+                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', gap: '8px' }}>
+                  <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(branch)} style={{ fontSize: '12px' }}><Edit size={14} /> Edit</button>
+                  {!branch.isHeadquarters && (
+                    <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(branch.id)} style={{ color: '#EF4444', fontSize: '12px' }}><Trash2 size={14} /> Remove</button>
+                  )}
+                 </div>
             </div>
           ))}
         </div>
@@ -202,6 +245,41 @@ export default function BranchesPage() {
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={creating}>
                   {creating ? <><Loader2 size={16} className="spinner" /> Creating...</> : <><Plus size={16} /> Create Branch</>}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Edit Modal */}
+      {showEditModal && editingBranch && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }} onClick={() => setShowEditModal(false)}>
+          <div className="card animate-scale-in" style={{ width: '520px', padding: '28px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: 700 }}>Edit Branch</h2>
+              <button className="btn btn-ghost btn-icon" onClick={() => setShowEditModal(false)}><X size={18} /></button>
+            </div>
+            <form onSubmit={onUpdate}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div><label className="label">Branch Name *</label><input name="name" className="input" defaultValue={editingBranch.name} required /></div>
+                <div><label className="label">Code *</label><input name="code" className="input" defaultValue={editingBranch.code} required /></div>
+                <div><label className="label">City</label><input name="city" className="input" defaultValue={editingBranch.city || ''} /></div>
+                <div><label className="label">State</label><input name="state" className="input" defaultValue={editingBranch.state || ''} /></div>
+                <div><label className="label">Phone</label><input name="phone" className="input" defaultValue={editingBranch.phone || ''} /></div>
+                <div><label className="label">Email</label><input name="email" className="input" type="email" defaultValue={editingBranch.email || ''} /></div>
+                <div>
+                  <label className="label">Status</label>
+                  <select name="status" className="input" defaultValue={editingBranch.status}>
+                    <option value="ACTIVE">Active</option>
+                    <option value="INACTIVE">Inactive</option>
+                    <option value="CLOSED">Closed</option>
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowEditModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={updating}>
+                  {updating ? <><Loader2 size={16} className="spinner" /> Updating...</> : <><Check size={16} /> Update Branch</>}
                 </button>
               </div>
             </form>

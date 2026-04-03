@@ -63,6 +63,7 @@ export default function LeadDetailPage() {
   // Activity Logging State
   const [showLogModal, setShowLogModal] = useState(false)
   const [logging, setLogging] = useState(false)
+  const [converting, setConverting] = useState(false)
 
   const fetchLead = useCallback(async () => {
     setLoading(true)
@@ -108,6 +109,25 @@ export default function LeadDetailPage() {
     }
   }
 
+  const handleConvertToDeal = async () => {
+    if (!confirm('Convert this lead into a deal?')) return
+    setConverting(true)
+    try {
+      const res = await fetch(`/api/leads/${id}/convert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      if (!res.ok) throw new Error('Conversion failed')
+      const data = await res.json()
+      alert('Lead successfully converted to a deal!')
+      router.push(`/dashboard/deals/${data.id}`)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error converting lead')
+    } finally {
+      setConverting(false)
+    }
+  }
+
   if (loading) return (
     <div style={{ height: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
       <Loader2 size={32} className="spinner" />
@@ -139,7 +159,13 @@ export default function LeadDetailPage() {
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
            <button className="btn btn-secondary" onClick={() => setShowLogModal(true)}><Plus size={16} /> Log Activity</button>
-           <button className="btn btn-primary">Convert to Deal</button>
+           <button 
+             className="btn btn-primary" 
+             onClick={handleConvertToDeal} 
+             disabled={converting || lead.status === 'CONVERTED'}
+           >
+             {converting ? <Loader2 size={16} className="spinner" /> : 'Convert to Deal'}
+           </button>
            <button className="btn btn-ghost btn-icon"><MoreHorizontal size={20} /></button>
         </div>
       </div>

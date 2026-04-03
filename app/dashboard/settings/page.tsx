@@ -244,12 +244,115 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {(activeTab === 'notifications' || activeTab === 'security' || activeTab === 'appearance' || activeTab === 'email') && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px', textAlign: 'center' }}>
+          {activeTab === 'notifications' && (
+            <div>
+              <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '24px' }}>Notification Preferences</h2>
+              {[
+                { label: 'Email Notifications', desc: 'Receive updates via email for leads, deals, and tickets', key: 'emailNotifs' },
+                { label: 'Browser Notifications', desc: 'Get push notifications in your browser', key: 'browserNotifs' },
+                { label: 'Lead Assignments', desc: 'Notify when a new lead is assigned to you', key: 'leadNotifs' },
+                { label: 'Deal Updates', desc: 'Notify when deal stages change', key: 'dealNotifs' },
+                { label: 'Ticket Replies', desc: 'Notify when a ticket receives a reply', key: 'ticketNotifs' },
+                { label: 'Weekly Reports', desc: 'Receive a weekly summary of your CRM activity', key: 'weeklyReport' },
+              ].map((item) => (
+                <div key={item.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid var(--surface-border)' }}>
+                  <div>
+                    <div style={{ fontSize: '14px', fontWeight: 600 }}>{item.label}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{item.desc}</div>
+                  </div>
+                  <label style={{ position: 'relative', width: '44px', height: '24px', cursor: 'pointer' }}>
+                    <input type="checkbox" defaultChecked style={{ opacity: 0, width: 0, height: 0 }} />
+                    <span style={{ position: 'absolute', inset: 0, background: '#6366F1', borderRadius: '12px', transition: 'background 200ms' }} />
+                    <span style={{ position: 'absolute', top: '3px', left: '3px', width: '18px', height: '18px', background: 'white', borderRadius: '50%', transition: 'transform 200ms', transform: 'translateX(20px)' }} />
+                  </label>
+                </div>
+              ))}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
+                <button className="btn btn-primary" onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 2000) }}>
+                  {saved ? <><Check size={16} /> Saved!</> : <><Save size={16} /> Save Preferences</>}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'security' && (
+            <div>
+              <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '24px' }}>Security Settings</h2>
+              <div style={{ marginBottom: '32px' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '16px' }}>Change Password</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '400px' }}>
+                  <div><label className="label">Current Password</label><input type="password" className="input" placeholder="Enter current password" /></div>
+                  <div><label className="label">New Password</label><input type="password" className="input" placeholder="Enter new password" /></div>
+                  <div><label className="label">Confirm Password</label><input type="password" className="input" placeholder="Confirm new password" /></div>
+                </div>
+              </div>
+              <div style={{ borderTop: '1px solid var(--surface-border)', paddingTop: '24px' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px' }}>Active Sessions</h3>
+                <div style={{ background: 'var(--surface-raised)', borderRadius: '10px', padding: '16px', border: '1px solid var(--surface-border)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: 600 }}>Current Session</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Active now • Chrome on macOS</div>
+                    </div>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }} />
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
+                <button className="btn btn-primary" onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 2000) }}>
+                  {saved ? <><Check size={16} /> Saved!</> : <><Save size={16} /> Update Password</>}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'appearance' && (
+            <div>
+              <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '24px' }}>Appearance</h2>
+              <div style={{ marginBottom: '24px' }}>
+                <label className="label">Theme</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '8px' }}>
+                  <button className="card" style={{ padding: '20px', textAlign: 'center', cursor: 'pointer', border: '2px solid var(--surface-border)' }} onClick={() => { document.documentElement.classList.remove('dark'); localStorage.setItem('theme', 'light') }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#F8FAFC', border: '1px solid #E2E8F0', margin: '0 auto 10px' }} />
+                    <div style={{ fontSize: '13px', fontWeight: 600 }}>Light</div>
+                  </button>
+                  <button className="card" style={{ padding: '20px', textAlign: 'center', cursor: 'pointer', border: '2px solid var(--surface-border)' }} onClick={() => { document.documentElement.classList.add('dark'); localStorage.setItem('theme', 'dark') }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#1E1E2E', border: '1px solid #374151', margin: '0 auto 10px' }} />
+                    <div style={{ fontSize: '13px', fontWeight: 600 }}>Dark</div>
+                  </button>
+                </div>
+              </div>
               <div>
-                <div style={{ fontSize: '48px', marginBottom: '16px' }}>🚧</div>
-                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>Coming Soon</h3>
-                <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>This section is under development.</p>
+                <label className="label">Sidebar Density</label>
+                <select className="input" style={{ maxWidth: '300px' }}>
+                  <option value="default">Default</option>
+                  <option value="compact">Compact</option>
+                  <option value="comfortable">Comfortable</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'email' && (
+            <div>
+              <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '24px' }}>Email Configuration</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div><label className="label">SMTP Host</label><input className="input" placeholder="smtp.gmail.com" /></div>
+                <div><label className="label">SMTP Port</label><input className="input" placeholder="587" /></div>
+                <div><label className="label">Username</label><input className="input" placeholder="your@email.com" /></div>
+                <div><label className="label">Password</label><input className="input" type="password" placeholder="App password" /></div>
+                <div><label className="label">From Name</label><input className="input" placeholder="MultiCRM" /></div>
+                <div><label className="label">From Email</label><input className="input" placeholder="noreply@yourcompany.com" /></div>
+              </div>
+              <div style={{ marginTop: '20px', padding: '16px', background: 'rgba(99,102,241,.05)', borderRadius: '10px', border: '1px solid rgba(99,102,241,.15)' }}>
+                <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>Test Connection</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Send a test email to verify your SMTP configuration works.</div>
+                <button className="btn btn-secondary btn-sm" style={{ marginTop: '10px' }}>Send Test Email</button>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
+                <button className="btn btn-primary" onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 2000) }}>
+                  {saved ? <><Check size={16} /> Saved!</> : <><Save size={16} /> Save Email Config</>}
+                </button>
               </div>
             </div>
           )}

@@ -89,26 +89,26 @@ export function NotificationsPopover({ onClose }: { onClose: () => void }) {
         zIndex: 50,
       }}
     >
-      <div className="p-4 border-b border-white/5 flex items-center justify-between">
-        <span className="font-semibold text-sm">Notifications</span>
+      <div style={{ padding: '16px', borderBottom: '1px solid var(--surface-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontWeight: 600, fontSize: '14px' }}>Notifications</span>
         {unreadCount > 0 && (
-          <button 
-            onClick={markAllRead} 
-            className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
+          <button
+            onClick={markAllRead}
+            style={{ fontSize: '12px', color: '#6366F1', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
           >
             <CheckSquare size={14} /> Mark all read
           </button>
         )}
       </div>
-      <div className="max-h-[400px] overflow-y-auto p-2">
+      <div style={{ maxHeight: '400px', overflowY: 'auto', padding: '8px' }}>
         {loading ? (
-          <div className="p-6 text-center text-sm text-[var(--text-muted)]">
+          <div style={{ padding: '24px', textAlign: 'center', fontSize: '13px', color: 'var(--text-muted)' }}>
             Loading...
           </div>
         ) : notifications.length === 0 ? (
-          <div className="p-8 text-center text-[var(--text-muted)] flex flex-col items-center">
-            <Bell size={24} className="mb-2 opacity-50" />
-            <p className="text-sm">You're all caught up!</p>
+          <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Bell size={24} style={{ marginBottom: '8px', opacity: 0.5 }} />
+            <p style={{ fontSize: '13px' }}>You&apos;re all caught up!</p>
           </div>
         ) : (
           notifications.map(n => (
@@ -118,24 +118,29 @@ export function NotificationsPopover({ onClose }: { onClose: () => void }) {
                 if (!n.isRead) markAsRead(n.id)
                 if (n.link && typeof window !== 'undefined') window.location.href = n.link
               }}
-              className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                !n.isRead ? 'bg-indigo-500/10 hover:bg-indigo-500/20' : 'hover:bg-white/[0.02]'
-              }`}
+              style={{
+                padding: '12px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'background 150ms',
+                background: !n.isRead ? 'rgba(99,102,241,.08)' : 'transparent',
+                marginBottom: '2px',
+              }}
             >
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <h4 className={`text-sm ${!n.isRead ? 'font-semibold text-white' : 'font-medium text-[var(--text-secondary)]'}`}>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ fontSize: '13px', fontWeight: !n.isRead ? 600 : 500, color: !n.isRead ? 'var(--text-primary)' : 'var(--text-secondary)', margin: 0 }}>
                     {n.title}
                   </h4>
-                  <p className="text-xs text-[var(--text-muted)] mt-1 break-words line-clamp-2">
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', lineHeight: '1.4', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                     {n.message}
                   </p>
-                  <p className="text-[10px] text-[var(--text-muted)] mt-2 font-mono">
+                  <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '6px', fontFamily: 'monospace' }}>
                     {getTimeAgo(n.createdAt)}
                   </p>
                 </div>
                 {!n.isRead && (
-                  <div className="w-2 h-2 rounded-full bg-indigo-500 mt-1.5 flex-shrink-0" />
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#6366F1', marginTop: '6px', flexShrink: 0 }} />
                 )}
               </div>
             </div>

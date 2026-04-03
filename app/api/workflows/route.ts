@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
             order: index
           })) || [
             // Default action if none provided
-            { type: 'NOTIFICATION', config: { message: 'Workflow triggered' }, order: 0 }
+            { type: 'CREATE_NOTIFICATION', config: { message: 'Workflow triggered' }, order: 0 }
           ]
         }
       },

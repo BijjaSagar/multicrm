@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { 
   BarChart3, MessageSquare, Zap, Globe, Shield, Users, 
   ArrowRight, CheckCircle2, PlayCircle, Star, Menu, X,
-  Github as GithubIcon, MessageCircle, ExternalLink, Mail
+  Github as GithubIcon, MessageCircle, ExternalLink, Mail,
+  Building2, Activity
 } from 'lucide-react'
 
 // --- Custom Animations Helpers ---
@@ -25,23 +26,23 @@ export default function LandingPage() {
 
   return (
     <div className="landing-root" style={{ 
-      backgroundColor: '#0F172A', 
-      color: '#F8FAFC',
-      fontFamily: 'Inter, sans-serif',
+      backgroundColor: '#FFFFFF', 
+      color: '#1E293B',
+      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
       overflowX: 'hidden'
     }}>
-      {/* Dynamic Navbar */}
+      {/* Professional Navbar */}
       <nav style={{ 
         position: 'fixed', 
         top: 0, 
         left: 0, 
         width: '100%', 
         zIndex: 1000,
-        backgroundColor: scrollY > 50 ? 'rgba(15, 23, 42, 0.9)' : 'transparent',
-        backdropFilter: scrollY > 50 ? 'blur(12px)' : 'none',
-        transition: 'all 0.4s ease',
-        borderBottom: scrollY > 50 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-        padding: scrollY > 50 ? '12px 0' : '24px 0'
+        backgroundColor: scrollY > 20 ? 'rgba(255, 255, 255, 0.98)' : 'transparent',
+        backdropFilter: 'blur(8px)',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        borderBottom: scrollY > 20 ? '1px solid #E2E8F0' : 'none',
+        padding: scrollY > 20 ? '14px 0' : '28px 0'
       }}>
         <div className="container" style={{ 
           maxWidth: '1200px', 
@@ -51,21 +52,21 @@ export default function LandingPage() {
           justifyContent: 'space-between',
           padding: '0 24px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ 
-              width: '40px', 
-              height: '40px', 
-              background: 'linear-gradient(135deg, #6366F1, #A855F7)', 
-              borderRadius: '10px',
+              width: '42px', 
+              height: '42px', 
+              background: '#2563EB', 
+              borderRadius: '12px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 8px 16px rgba(99, 102, 241, 0.3)'
+              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.15)'
             }}>
-              <Globe size={22} color="white" />
+              <Building2 size={24} color="white" strokeWidth={2.5} />
             </div>
-            <span style={{ fontSize: '22px', fontWeight: 900, letterSpacing: '-0.5px' }}>
-              Multi<span style={{ color: '#6366F1' }}>CRM</span>
+            <span style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.8px', color: '#0F172A' }}>
+              Multi<span style={{ color: '#2563EB' }}>CRM</span>
             </span>
           </div>
 
@@ -74,265 +75,304 @@ export default function LandingPage() {
               <a key={link} href={`#${link.toLowerCase()}`} style={{ 
                 fontSize: '15px', 
                 fontWeight: 600, 
-                color: 'rgba(248, 250, 252, 0.7)',
+                color: '#64748B',
                 textDecoration: 'none',
-                transition: 'color 0.3s'
-              }} onMouseOver={e => e.currentTarget.style.color = 'white'} 
-                 onMouseOut={e => e.currentTarget.style.color = 'rgba(248, 250, 252, 0.7)'}>
+                transition: 'color 0.2s ease'
+              }} onMouseOver={e => e.currentTarget.style.color = '#2563EB'} 
+                 onMouseOut={e => e.currentTarget.style.color = '#64748B'}>
                 {link}
               </a>
             ))}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <Link href="/auth/login" style={{ 
               fontSize: '15px', 
               fontWeight: 700, 
-              color: '#F8FAFC',
-              textDecoration: 'none'
-            }}>Sign In</Link>
+              color: '#475569',
+              textDecoration: 'none',
+              transition: 'color 0.2s'
+            }} onMouseOver={e => e.currentTarget.style.color = '#0F172A'}
+               onMouseOut={e => e.currentTarget.style.color = '#475569'}>
+              Sign In
+            </Link>
             <Link href="/auth/register" style={{ 
-              backgroundColor: '#6366F1',
+              backgroundColor: '#2563EB',
               color: 'white',
-              padding: '12px 24px',
+              padding: '12px 28px',
               borderRadius: '12px',
               fontSize: '15px',
               fontWeight: 700,
               textDecoration: 'none',
-              boxShadow: '0 10px 20px rgba(99, 102, 241, 0.3)',
-              transition: 'transform 0.3s'
-            }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-               onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: '0 8px 20px rgba(37, 99, 235, 0.2)'
+            }} onMouseOver={e => {
+                e.currentTarget.style.transform = 'translateY(-2px)'
+                e.currentTarget.style.boxShadow = '0 12px 24px rgba(37, 99, 235, 0.25)'
+               }}
+               onMouseOut={e => {
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = '0 8px 20px rgba(37, 99, 235, 0.2)'
+               }}>
               Get Started
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {/* Corporate Hero Section */}
       <section style={{ 
-        paddingTop: '180px', 
-        paddingBottom: '120px', 
+        paddingTop: '200px', 
+        paddingBottom: '140px', 
+        background: 'linear-gradient(180deg, #F8FAFC 0%, #FFFFFF 100%)',
         textAlign: 'center',
         position: 'relative'
       }}>
-        {/* Background Glare */}
+        {/* Subtle Grid Background */}
         <div style={{ 
-          position: 'absolute', 
-          top: '-10%', 
-          left: '50%', 
-          transform: 'translateX(-50%)',
-          width: '800px',
-          height: '800px',
-          background: 'radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(15, 23, 42, 0) 70%)',
-          zIndex: -1
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: `radial-gradient(#E2E8F0 1px, transparent 1px)`,
+          backgroundSize: '40px 40px',
+          opacity: 0.4,
+          zIndex: 0
         }} />
 
-        <div className="container" style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 24px' }}>
+        <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 24px', position: 'relative', zIndex: 1 }}>
           <div style={{ 
             display: 'inline-flex', 
             alignItems: 'center', 
             gap: '8px', 
-            backgroundColor: 'rgba(99, 102, 241, 0.1)',
-            border: '1px solid rgba(99, 102, 241, 0.2)',
-            padding: '8px 16px',
+            backgroundColor: '#DBEAFE',
+            padding: '8px 20px',
             borderRadius: '100px',
-            marginBottom: '24px'
+            marginBottom: '32px',
+            border: '1px solid #BFDBFE'
           }}>
-            <Zap size={14} color="#6366F1" />
-            <span style={{ fontSize: '13px', fontWeight: 700, color: '#818CF8', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-              Phase 5 Now Live
+            <Shield size={14} color="#2563EB" />
+            <span style={{ fontSize: '13px', fontWeight: 800, color: '#1E40AF', letterSpacing: '0.8px', textTransform: 'uppercase' }}>
+              Enterprise Grade Multi-Tenant CRM
             </span>
           </div>
 
           <h1 style={{ 
-            fontSize: 'max(48px, 5vw)', 
+            fontSize: 'max(52px, 5.5vw)', 
             fontWeight: 900, 
-            lineHeight: 1.1, 
-            letterSpacing: '-2px',
-            marginBottom: '24px',
-            background: 'linear-gradient(135deg, #F8FAFC 0%, #94A3B8 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
+            lineHeight: 1.05, 
+            letterSpacing: '-2.5px',
+            marginBottom: '32px',
+            color: '#0F172A'
           }}>
-            Multi-Tenant Omnichannel <br />
-            <span style={{ color: '#6366F1' }}>Growth Platform</span>
+            Scale Your Business with <br />
+            <span style={{ color: '#2563EB' }}>Intelligent Governance.</span>
           </h1>
 
           <p style={{ 
-            fontSize: '19px', 
+            fontSize: '20px', 
             lineHeight: 1.6, 
-            color: '#94A3B8', 
-            maxWidth: '700px', 
-            margin: '0 auto 40px',
+            color: '#475569', 
+            maxWidth: '750px', 
+            margin: '0 auto 48px',
             fontWeight: 500
           }}>
-            Scale your business with automated WhatsApp workflows, real-time analytics, and enterprise multi-branch management. The only CRM built for high-velocity teams.
+            The professional choice for multi-branch management. Centralize operations, automate workflows, and drive consistent growth across every department with our secure, omnichannel platform.
           </p>
 
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
              <Link href="/auth/register" style={{ 
-                padding: '18px 36px', 
-                backgroundColor: '#6366F1', 
+                padding: '20px 42px', 
+                backgroundColor: '#2563EB', 
                 borderRadius: '14px', 
                 fontSize: '17px', 
                 fontWeight: 800, 
                 color: 'white', 
-                boxShadow: '0 20px 40px rgba(99, 102, 241, 0.25)',
+                boxShadow: '0 20px 40px rgba(37, 99, 235, 0.2)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px'
-             }}>
-                Create Workspace <ArrowRight size={20} />
+                gap: '12px',
+                transition: 'all 0.2s'
+             }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#1D4ED8'}
+                onMouseOut={e => e.currentTarget.style.backgroundColor = '#2563EB'}>
+                Create Workspace <ArrowRight size={20} strokeWidth={2.5} />
              </Link>
              <button style={{ 
-                padding: '18px 36px', 
-                backgroundColor: 'transparent', 
-                border: '1px solid rgba(255,255,255,0.1)',
+                padding: '20px 42px', 
+                backgroundColor: '#FFFFFF', 
+                border: '1px solid #E2E8F0',
                 borderRadius: '14px', 
                 fontSize: '17px', 
                 fontWeight: 700, 
-                color: 'white',
+                color: '#0F172A',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px'
-             }}>
-                <PlayCircle size={20} /> Watch Demo
+                gap: '12px',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.02)',
+                transition: 'all 0.2s'
+             }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#F8FAFC'}
+                onMouseOut={e => e.currentTarget.style.backgroundColor = '#FFFFFF'}>
+                <PlayCircle size={20} color="#64748B" /> Watch Demo
              </button>
           </div>
         </div>
       </section>
 
-      {/* Phase Modules Grid */}
-      <section id="services" style={{ padding: '80px 0', backgroundColor: '#0F172A' }}>
+      {/* Strategic Modules Section */}
+      <section id="services" style={{ padding: '120px 0', backgroundColor: '#F8FAFC' }}>
         <div className="container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-            <h2 style={{ fontSize: '36px', fontWeight: 800, marginBottom: '16px' }}>One Platform. Every Channel.</h2>
-            <p style={{ color: '#94A3B8', fontSize: '17px' }}>Seamlessly integrated modules for every stage of your growth.</p>
+          <div style={{ textAlign: 'center', marginBottom: '80px' }}>
+            <h2 style={{ fontSize: '42px', fontWeight: 900, marginBottom: '20px', color: '#0F172A', letterSpacing: '-1px' }}>
+              Advanced CRM Foundations
+            </h2>
+            <p style={{ color: '#64748B', fontSize: '18px', maxWidth: '600px', margin: '0 auto', fontWeight: 500 }}>
+              Purpose-built modules designed to streamline complex business structures and accelerate team productivity.
+            </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '32px' }}>
             {[
               { 
-                icon: Globe, color: '#6366F1', title: 'Multi-Tenant SaaS', 
-                desc: 'Independent workspaces with branch-level isolation, secure RBAC, and branded subdomains.' 
+                icon: Building2, color: '#2563EB', title: 'Multi-Tenant Architecture', 
+                desc: 'Enterprise-grade workspace isolation with secure branch management and customized access policies.' 
               },
               { 
-                icon: Users, color: '#10B981', title: 'Unified Lead Hub', 
-                desc: 'Centralize leads from WebHub, LinkedIn, and Ads. Auto-score leads and assign via Round Robin.' 
+                icon: Users, color: '#059669', title: 'Smart Lead Management', 
+                desc: 'Intelligent scoring and automated distribution engines that ensure high-priority leads are never missed.' 
               },
               { 
-                icon: MessageSquare, color: '#F59E0B', title: 'Omnichannel Support', 
-                desc: 'Ticketing system integrated with WhatsApp, Email, and Customer Portal for 360-degree service.' 
+                icon: MessageSquare, color: '#D97706', title: 'Omnichannel Operations', 
+                desc: 'A unified hub for WhatsApp, Email, and internal communications, built for high-touch service teams.' 
               },
               { 
-                icon: Zap, color: '#A855F7', title: 'Workflow Engine', 
-                desc: 'Trigger automated WhatsApp templates and emails based on deal stage movements and ticket status.' 
+                icon: Activity, color: '#7C3AED', title: 'Performance Analytics', 
+                desc: 'Real-time data visualization across teams and branches, providing actionable insights into your growth.' 
               },
               { 
-                icon: BarChart3, color: '#EC4899', title: 'AI Intelligence', 
-                desc: 'Predictive revenue forecasting and team performance metrics baked into your analytics dashboard.' 
+                icon: Shield, color: '#0891B2', title: 'Security & Compliance', 
+                desc: 'Comprehensive audit trails and role-based permissions ensure data integrity across your entire organization.' 
               },
               { 
-                icon: Shield, color: '#06B6D4', title: 'Enterprise Audit', 
-                desc: 'Complete transparency with timestamped audit logs for every action taken across your organization.' 
+                icon: Globe, color: '#4F46E5', title: 'Global Connectivity', 
+                desc: 'Connect with clients worldwide through multi-language support and integrated global messaging APIs.' 
               }
             ].map((module, i) => (
               <div key={i} className="card" style={{ 
-                padding: '40px', 
-                backgroundColor: 'rgba(30, 41, 59, 0.5)', 
-                border: '1px solid rgba(255,255,255,0.05)',
-                borderRadius: '24px',
-                transition: 'all 0.3s ease',
+                padding: '48px', 
+                backgroundColor: '#FFFFFF', 
+                border: '1px solid #E2E8F0',
+                borderRadius: '32px',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.03)'
               }} onMouseOver={e => {
-                e.currentTarget.style.transform = 'translateY(-8px)'
-                e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.3)'
+                e.currentTarget.style.transform = 'translateY(-10px)'
+                e.currentTarget.style.boxShadow = '0 25px 50px rgba(0,0,0,0.06)'
+                e.currentTarget.style.borderColor = '#BFDBFE'
               }} onMouseOut={e => {
                 e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'
+                e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.03)'
+                e.currentTarget.style.borderColor = '#E2E8F0'
               }}>
                 <div style={{ 
-                  width: '56px', 
-                  height: '56px', 
-                  borderRadius: '16px', 
-                  backgroundColor: `${module.color}15`, 
+                  width: '64px', 
+                  height: '64px', 
+                  borderRadius: '20px', 
+                  backgroundColor: `${module.color}08`, 
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'center',
-                  marginBottom: '24px'
+                  marginBottom: '32px',
+                  border: `1px solid ${module.color}15`
                 }}>
-                  <module.icon size={28} color={module.color} />
+                  <module.icon size={32} color={module.color} strokeWidth={2} />
                 </div>
-                <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '12px' }}>{module.title}</h3>
-                <p style={{ color: '#94A3B8', lineHeight: 1.6, fontSize: '15px' }}>{module.desc}</p>
+                <h3 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '16px', color: '#0F172A' }}>{module.title}</h3>
+                <p style={{ color: '#475569', lineHeight: 1.7, fontSize: '15px', fontWeight: 500 }}>{module.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Project Journey Walkthrough */}
-      <section style={{ padding: '100px 0', position: 'relative' }}>
+      {/* Corporate Excellence Section */}
+      <section style={{ padding: '140px 0', backgroundColor: '#FFFFFF' }}>
           <div className="container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '100px', alignItems: 'center' }}>
                   <div>
-                      <h2 style={{ fontSize: '42px', fontWeight: 900, marginBottom: '24px', lineHeight: 1.2 }}>
-                        Built with Precision. <br />
-                        <span style={{ color: '#6366F1' }}>Five Phases of Innovation.</span>
+                      <h2 style={{ fontSize: '48px', fontWeight: 900, marginBottom: '32px', lineHeight: 1.1, letterSpacing: '-1.5px', color: '#0F172A' }}>
+                        Designed for <br />
+                        <span style={{ color: '#2563EB' }}>Corporate Efficiency.</span>
                       </h2>
+                      <p style={{ fontSize: '18px', color: '#64748B', marginBottom: '48px', lineHeight: 1.6, fontWeight: 500 }}>
+                        We've built MultiCRM with a focus on deep structural integrity and ease of use, ensuring your team spends more time growing and less time managing.
+                      </p>
+                      
                       {[
-                        { ph: 'Phase 1', title: 'SaaS Foundation', desc: 'Secure multi-tenant workspace with branch-level isolation.' },
-                        { ph: 'Phase 2', title: 'Sales & Service', desc: 'Complete lead handling, deal pipelines, and support portal.' },
-                        { ph: 'Phase 3', title: 'Automation Hub', desc: 'WhatsApp & Email integration for business workflows.' },
-                        { ph: 'Phase 4', title: 'Intelligent Data', desc: 'AI-forecasting and real-time performance analytics.' }
-                      ].map((p, i) => (
-                        <div key={i} style={{ display: 'flex', gap: '20px', marginBottom: '32px' }}>
-                           <div style={{ fontSize: '14px', fontWeight: 800, color: '#6366F1', width: '80px' }}>{p.ph}</div>
+                        { title: 'Data Sovereignty', desc: 'Independent data silos for every workspace ensures total security.' },
+                        { title: 'Workflow Precision', desc: 'Define granular rules for lead routing and automated responses.' },
+                        { title: 'Enterprise Audit', desc: 'Every action is logged with detailed metadata for compliance.' }
+                      ].map((item, i) => (
+                        <div key={i} style={{ display: 'flex', gap: '24px', marginBottom: '36px' }}>
+                           <div style={{ 
+                             width: '32px', 
+                             height: '32px', 
+                             borderRadius: '50%', 
+                             background: '#EFF6FF', 
+                             display: 'flex', 
+                             alignItems: 'center', 
+                             justifyContent: 'center', 
+                             flexShrink: 0 
+                           }}>
+                             <CheckCircle2 size={18} color="#2563EB" strokeWidth={2.5} />
+                           </div>
                            <div>
-                              <h4 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '4px' }}>{p.title}</h4>
-                              <p style={{ color: '#94A3B8', fontSize: '15px' }}>{p.desc}</p>
+                              <h4 style={{ fontSize: '19px', fontWeight: 800, marginBottom: '6px', color: '#0F172A' }}>{item.title}</h4>
+                              <p style={{ color: '#64748B', fontSize: '15px', fontWeight: 500 }}>{item.desc}</p>
                            </div>
                         </div>
                       ))}
                   </div>
+
                   <div style={{ position: 'relative' }}>
                       <div style={{ 
-                        backgroundColor: '#1E293B', 
-                        borderRadius: '32px', 
-                        padding: '40px', 
-                        border: '1px solid rgba(255,255,255,0.05)',
-                        boxShadow: '0 40px 80px rgba(0,0,0,0.5)'
+                        backgroundColor: '#FFFFFF', 
+                        borderRadius: '40px', 
+                        padding: '48px', 
+                        border: '1px solid #E2E8F0',
+                        boxShadow: '0 40px 100px rgba(0,0,0,0.08)',
+                        zIndex: 1,
+                        position: 'relative'
                       }}>
-                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '32px' }}>
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                               <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#EF4444' }} />
-                               <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#F59E0B' }} />
-                               <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#10B981' }} />
+                         <div style={{ display: 'flex', gap: '12px', marginBottom: '40px' }}>
+                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#CBD5E1' }} />
+                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#E2E8F0' }} />
+                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#F1F5F9' }} />
+                         </div>
+                         
+                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <div style={{ height: '40px', width: '60%', borderRadius: '10px', backgroundColor: '#F1F5F9' }} />
+                            <div style={{ height: '100px', borderRadius: '16px', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }} />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                               <div style={{ height: '80px', borderRadius: '12px', backgroundColor: '#F1F5F9' }} />
+                               <div style={{ height: '80px', borderRadius: '12px', backgroundColor: '#F1F5F9' }} />
                             </div>
                          </div>
-                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-                            {[1, 2, 3, 4].map(idx => (
-                               <div key={idx} style={{ height: '120px', borderRadius: '16px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.1)' }} />
-                            ))}
-                         </div>
-                         <div style={{ marginTop: '24px', height: '60px', borderRadius: '12px', background: 'linear-gradient(90deg, #6366F1, #A855F7)' }} />
+                         
+                         <div style={{ marginTop: '40px', height: '56px', borderRadius: '14px', background: '#2563EB', opacity: 0.9 }} />
                       </div>
                       
-                      {/* Floating Indicator */}
+                      {/* Professional Stat Badge */}
                       <div style={{ 
                         position: 'absolute', 
                         bottom: '-30px', 
-                        left: '-30px', 
-                        backgroundColor: '#6366F1', 
-                        padding: '24px', 
+                        right: '-30px', 
+                        backgroundColor: '#FFFFFF', 
+                        padding: '28px 36px', 
                         borderRadius: '24px',
-                        boxShadow: '0 20px 40px rgba(99, 102, 241, 0.4)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '8px'
+                        boxShadow: '0 30px 60px rgba(0, 0, 0, 0.12)',
+                        border: '1px solid #E2E8F0',
+                        zIndex: 2
                       }}>
-                         <div style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.7)' }}>Platform Status</div>
-                         <div style={{ fontSize: '24px', fontWeight: 900, color: 'white' }}>100% Build</div>
+                         <div style={{ fontSize: '13px', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', marginBottom: '8px' }}>Security Index</div>
+                         <div style={{ fontSize: '32px', fontWeight: 900, color: '#2563EB' }}>100% Secure</div>
                       </div>
                   </div>
               </div>
@@ -344,60 +384,77 @@ export default function LandingPage() {
           <div style={{ 
             maxWidth: '1200px', 
             margin: '0 auto', 
-            backgroundColor: '#6366F1', 
-            borderRadius: '40px', 
-            padding: '80px 40px',
+            backgroundColor: '#0F172A', 
+            borderRadius: '48px', 
+            padding: '100px 40px',
             textAlign: 'center',
-            background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)',
-            boxShadow: '0 40px 80px rgba(99, 102, 241, 0.3)',
+            background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+            boxShadow: '0 50px 100px rgba(15, 23, 42, 0.2)',
             position: 'relative',
             overflow: 'hidden'
           }}>
              <div style={{ position: 'relative', zIndex: 2 }}>
-                <h2 style={{ fontSize: '42px', fontWeight: 900, marginBottom: '24px' }}>Ready to Scale Your Team?</h2>
-                <p style={{ fontSize: '20px', maxWidth: '600px', margin: '0 auto 48px', color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>Create your workspace today and discover the power of automated omnichannel growth.</p>
-                <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-                    <Link href="/auth/register" style={{ padding: '20px 40px', backgroundColor: 'white', color: '#6366F1', borderRadius: '16px', fontWeight: 900, fontSize: '18px' }}>
-                      Register Now
+                <h2 style={{ fontSize: '48px', fontWeight: 900, marginBottom: '24px', color: 'white', letterSpacing: '-1.5px' }}>Power Your Growth Today.</h2>
+                <p style={{ fontSize: '22px', maxWidth: '650px', margin: '0 auto 56px', color: '#94A3B8', fontWeight: 500, lineHeight: 1.5 }}>Join hundreds of forward-thinking teams using MultiCRM to streamline their business ecosystems.</p>
+                <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+                    <Link href="/auth/register" style={{ 
+                      padding: '22px 48px', 
+                      backgroundColor: '#2563EB', 
+                      color: 'white', 
+                      borderRadius: '16px', 
+                      fontWeight: 800, 
+                      fontSize: '18px',
+                      textDecoration: 'none',
+                      transition: 'all 0.2s',
+                      boxShadow: '0 10px 30px rgba(37, 99, 235, 0.3)'
+                    }}>
+                      Get Started Now
                     </Link>
-                    <Link href="/contact" style={{ padding: '20px 40px', backgroundColor: 'rgba(0,0,0,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '16px', fontWeight: 800, fontSize: '18px' }}>
+                    <Link href="/contact" style={{ 
+                      padding: '22px 48px', 
+                      backgroundColor: 'transparent', 
+                      color: 'white', 
+                      border: '1.5px solid rgba(255,255,255,0.15)', 
+                      borderRadius: '16px', 
+                      fontWeight: 700, 
+                      fontSize: '18px',
+                      textDecoration: 'none',
+                      transition: 'all 0.2s'
+                    }} onMouseOver={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}
+                       onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>
                       Contact Sales
                     </Link>
                 </div>
              </div>
-             
-             {/* Decorative Circles */}
-             <div style={{ position: 'absolute', top: '-100px', right: '-100px', width: '300px', height: '300px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
-             <div style={{ position: 'absolute', bottom: '-80px', left: '-80px', width: '200px', height: '200px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
           </div>
       </section>
 
-      {/* Footer */}
-      <footer style={{ padding: '100px 0 60px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      {/* Corporate Footer */}
+      <footer style={{ padding: '120px 0 60px', borderTop: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
           <div className="container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
-             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '48px', marginBottom: '80px' }}>
+             <div style={{ display: 'grid', gridTemplateColumns: '2.5fr 1fr 1fr 1fr', gap: '60px', marginBottom: '100px' }}>
                 <div>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
-                      <Globe size={28} color="#6366F1" />
-                      <span style={{ fontSize: '24px', fontWeight: 900 }}>Multi<span style={{ color: '#6366F1' }}>CRM</span></span>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
+                      <Building2 size={32} color="#2563EB" />
+                      <span style={{ fontSize: '26px', fontWeight: 900, color: '#0F172A', letterSpacing: '-0.8px' }}>
+                        Multi<span style={{ color: '#2563EB' }}>CRM</span>
+                      </span>
                    </div>
-                   <p style={{ color: '#94A3B8', lineHeight: 1.6, maxWidth: '300px' }}>
-                      The complete growth engine for modern enterprise teams. 
-                      Automated, intelligent, and scalable.
+                   <p style={{ color: '#64748B', lineHeight: 1.7, maxWidth: '340px', fontSize: '15px', fontWeight: 500 }}>
+                      The professional infrastructure for omnichannel business growth. Secure, scalable, and built for the modern enterprise.
                    </p>
-                   <div style={{ display: 'flex', gap: '16px', marginTop: '32px' }}>
-                      <div style={{ color: '#94A3B8', cursor: 'pointer' }}><GithubIcon size={20} /></div>
-                      <div style={{ color: '#94A3B8', cursor: 'pointer' }}><MessageCircle size={20} /></div>
-                      <div style={{ color: '#94A3B8', cursor: 'pointer' }}><ExternalLink size={20} /></div>
-                      <div style={{ color: '#94A3B8', cursor: 'pointer' }}><Mail size={20} /></div>
+                   <div style={{ display: 'flex', gap: '20px', marginTop: '40px' }}>
+                      <div style={{ color: '#94A3B8', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = '#2563EB'} onMouseOut={e => e.currentTarget.style.color = '#94A3B8'}><GithubIcon size={22} /></div>
+                      <div style={{ color: '#94A3B8', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = '#2563EB'} onMouseOut={e => e.currentTarget.style.color = '#94A3B8'}><MessageCircle size={22} /></div>
+                      <div style={{ color: '#94A3B8', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = '#2563EB'} onMouseOut={e => e.currentTarget.style.color = '#94A3B8'}><Mail size={22} /></div>
                    </div>
                 </div>
-                {['Platform', 'Resources', 'Company'].map((title, i) => (
+                {['Solutions', 'Resources', 'Company'].map((title, i) => (
                    <div key={i}>
-                      <h4 style={{ fontWeight: 800, marginBottom: '24px', color: 'white' }}>{title}</h4>
-                      <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                         {['Overview', 'Features', 'Solutions', 'Pricing'].map(item => (
-                           <li key={item} style={{ color: '#94A3B8', fontSize: '15px', cursor: 'pointer' }}>{item}</li>
+                      <h4 style={{ fontWeight: 800, marginBottom: '28px', color: '#0F172A', fontSize: '15px', textTransform: 'uppercase', letterSpacing: '1px' }}>{title}</h4>
+                      <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                         {['Sales Engine', 'Support Suite', 'Analytics', 'Integration'].map(item => (
+                           <li key={item} style={{ color: '#64748B', fontSize: '15px', cursor: 'pointer', fontWeight: 500, transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = '#2563EB'} onMouseOut={e => e.currentTarget.style.color = '#64748B'}>{item}</li>
                          ))}
                       </ul>
                    </div>
@@ -405,16 +462,19 @@ export default function LandingPage() {
              </div>
              <div style={{ 
                paddingTop: '40px', 
-               borderTop: '1px solid rgba(255,255,255,0.05)', 
+               borderTop: '1px solid #F1F5F9', 
                display: 'flex', 
                justifyContent: 'space-between',
+               alignItems: 'center',
                color: '#94A3B8',
-               fontSize: '14px'
+               fontSize: '14px',
+               fontWeight: 500
              }}>
-                <span>© 2026 MultiCRM Platform. Phase 5 Final Edition.</span>
-                <div style={{ display: 'flex', gap: '24px' }}>
-                   <span>Privacy Policy</span>
-                   <span>Terms of Service</span>
+                <span>© 2026 MultiCRM Pro Enterprise. All Rights Reserved.</span>
+                <div style={{ display: 'flex', gap: '32px' }}>
+                   <span style={{ cursor: 'pointer' }}>Security</span>
+                   <span style={{ cursor: 'pointer' }}>Privacy</span>
+                   <span style={{ cursor: 'pointer' }}>Legal</span>
                 </div>
              </div>
           </div>
@@ -423,7 +483,7 @@ export default function LandingPage() {
       <style jsx>{`
         .container { transition: all 0.3s ease; }
         .desktop-menu { display: flex !important; }
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
           .desktop-menu { display: none !important; }
         }
       `}</style>

@@ -55,7 +55,7 @@ export async function applyVerticalTemplate(
         entityType: f.entityType,
         fieldName: f.fieldName,
         fieldType: f.fieldType,
-        options: f.options ? JSON.stringify(f.options) : null,
+        options: (f.options as any) || Prisma.DbNull,
         isRequired: f.isRequired,
         displayOrder: i,
       })),

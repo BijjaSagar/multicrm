@@ -13,7 +13,7 @@ export async function GET(req: Request) {
   const endDate = searchParams.get('endDate')
 
   try {
-    const where = await getRBACWhere(session, 'TENANT') // Attendance is usually tenant-wide for managers
+    const where = getRBACWhere(session.user, 'TENANT') // Attendance is usually tenant-wide for managers
     
     // Filter by specific user if provided
     if (userId) {

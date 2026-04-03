@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/workflows - Create a new workflow
+// POST /api/workflows - Create a new workflow (Simple implementation for creating a basic automation)
 export async function POST(request: NextRequest) {
   try {
     const session = await getAuthSession()
@@ -53,7 +53,10 @@ export async function POST(request: NextRequest) {
             type: action.type,
             config: action.config || {},
             order: index
-          })) || []
+          })) || [
+            // Default action if none provided
+            { type: 'NOTIFICATION', config: { message: 'Workflow triggered' }, order: 0 }
+          ]
         }
       },
       include: {

@@ -53,8 +53,32 @@ export default function AutomationPage() {
      alert('Status toggle would call /api/workflows/[id] PATCH')
   }
 
+  const [showCreate, setShowCreate] = useState(false)
+  const [newPlan, setNewPlan] = useState({ name: '', trigger: 'LEAD_CREATED' })
+
+  const createPlan = async () => {
+    if (!newPlan.name) return alert('Please enter a name')
+    try {
+      const res = await fetch('/api/workflows', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newPlan.name,
+          triggerType: newPlan.trigger,
+          actions: [{ type: 'NOTIFICATION', config: { message: `New plan: ${newPlan.name} active` } }]
+        })
+      })
+      if (!res.ok) throw new Error('Create failed')
+      setShowCreate(false)
+      setNewPlan({ name: '', trigger: 'LEAD_CREATED' })
+      fetchWorkflows()
+    } catch (err) {
+      alert('Error creating plan')
+    }
+  }
+
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in" style={{ position: 'relative' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -64,9 +88,35 @@ export default function AutomationPage() {
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button className="btn btn-secondary btn-sm" onClick={fetchWorkflows}><RefreshCw size={14} /></button>
-          <button className="btn btn-primary"><Plus size={16} /> Create Plan</button>
+          <button className="btn btn-primary" onClick={() => setShowCreate(true)}><Plus size={16} /> Create Plan</button>
         </div>
       </div>
+
+      {showCreate && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+             <div className="card animate-fade-in-up" style={{ padding: '32px', maxWidth: '450px', width: '100%', boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}>
+                 <h2 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '20px' }}>New Automation Plan</h2>
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div>
+                        <label style={{ fontSize: '12px', fontWeight: 700, marginBottom: '6px', display: 'block' }}>Plan Name</label>
+                        <input type="text" className="input" placeholder="e.g. Welcome New Leads" value={newPlan.name} onChange={e => setNewPlan({...newPlan, name: e.target.value})} />
+                    </div>
+                    <div>
+                        <label style={{ fontSize: '12px', fontWeight: 700, marginBottom: '6px', display: 'block' }}>Trigger Event</label>
+                        <select className="input" value={newPlan.trigger} onChange={e => setNewPlan({...newPlan, trigger: e.target.value})}>
+                            <option value="LEAD_CREATED">When Lead is Created</option>
+                            <option value="DEAL_UPDATED">When Deal Status Changes</option>
+                            <option value="TICKET_ASSIGNED">When Ticket is Assigned</option>
+                        </select>
+                    </div>
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+                        <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setShowCreate(false)}>Cancel</button>
+                        <button className="btn btn-primary" style={{ flex: 1 }} onClick={createPlan}>Activate Plan</button>
+                    </div>
+                 </div>
+             </div>
+        </div>
+      )}
 
       {error && (
         <div className="card" style={{ padding: '16px', marginBottom: '20px', background: 'rgba(239,68,68,.05)', border: '1px solid rgba(239,68,68,.2)' }}>

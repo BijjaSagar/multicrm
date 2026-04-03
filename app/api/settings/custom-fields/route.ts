@@ -55,7 +55,7 @@ export async function POST(req: Request) {
         entityType,
         fieldName,
         fieldType,
-        options: options ? JSON.stringify(options) : null,
+        options: options || undefined,
         isRequired: !!isRequired,
       },
     })

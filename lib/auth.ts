@@ -17,6 +17,7 @@ declare module 'next-auth' {
       avatar: string | null
       tenantName: string
       tenantSlug: string
+      enabledModules: string[]
     }
   }
 
@@ -31,6 +32,7 @@ declare module 'next-auth' {
     avatar: string | null
     tenantName: string
     tenantSlug: string
+    enabledModules: string[]
   }
 
   interface JWT {
@@ -44,6 +46,7 @@ declare module 'next-auth' {
     avatar: string | null
     tenantName: string
     tenantSlug: string
+    enabledModules: string[]
   }
 }
 
@@ -111,6 +114,7 @@ export const authConfig: NextAuthConfig = {
           avatar: user.avatar,
           tenantName: user.tenant.name,
           tenantSlug: user.tenant.slug,
+          enabledModules: [], // Will be filled in JWT callback
         }
       },
     }),
@@ -165,6 +169,21 @@ export const authConfig: NextAuthConfig = {
         token.avatar = user.avatar
         token.tenantName = user.tenantName
         token.tenantSlug = user.tenantSlug
+
+        // Fetch enabled modules for the tenant
+        try {
+          const modules = await (prisma as any).tenantModule.findMany({
+            where: { 
+              tenantId: user.tenantId,
+              isEnabled: true 
+            },
+            select: { moduleKey: true }
+          })
+          token.enabledModules = modules.map((m: { moduleKey: string }) => m.moduleKey)
+        } catch (error) {
+          console.error('Error fetching tenant modules:', error)
+          token.enabledModules = []
+        }
       }
       return token
     },
@@ -181,6 +200,7 @@ export const authConfig: NextAuthConfig = {
         avatar: token.avatar as string | null,
         tenantName: token.tenantName as string,
         tenantSlug: token.tenantSlug as string,
+        enabledModules: (token.enabledModules as string[]) || [],
       }
       return session
     },

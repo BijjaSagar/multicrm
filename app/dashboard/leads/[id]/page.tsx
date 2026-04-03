@@ -6,8 +6,9 @@ import {
   User, Mail, Phone, Building2, MapPin, Calendar, 
   Clock, Plus, MoreHorizontal, ArrowLeft, Loader2,
   PhoneCall, Video, CheckCircle2, MessageSquare, AlertCircle,
-  TrendingUp, Star, Filter, Search, Edit3, Trash2
+  TrendingUp, Star, Filter, Search, Edit3, Trash2, Settings
 } from 'lucide-react'
+import { DynamicFieldRenderer } from '@/components/dynamic-field-renderer'
 
 interface Activity {
   id: string
@@ -226,6 +227,39 @@ export default function LeadDetailPage() {
                       <Plus size={16} />
                   </div>
                   <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '10px' }}>Lead created on {new Date(lead.createdAt).toLocaleDateString()}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'details' && (
+            <div className="animate-fade-in-up">
+              <DynamicFieldRenderer 
+                entityId={id as string} 
+                entityType="LEAD" 
+                onSave={fetchLead}
+              />
+              <div className="card" style={{ padding: '24px' }}>
+                <h4 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                   <User size={16} /> Basic Information
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                   <div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>First Name</div>
+                      <div style={{ fontSize: '14px', fontWeight: 600 }}>{lead.firstName}</div>
+                   </div>
+                   <div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Last Name</div>
+                      <div style={{ fontSize: '14px', fontWeight: 600 }}>{lead.lastName}</div>
+                   </div>
+                   <div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Email Address</div>
+                      <div style={{ fontSize: '14px', fontWeight: 600 }}>{lead.email}</div>
+                   </div>
+                   <div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Phone Number</div>
+                      <div style={{ fontSize: '14px', fontWeight: 600 }}>{lead.phone}</div>
+                   </div>
                 </div>
               </div>
             </div>

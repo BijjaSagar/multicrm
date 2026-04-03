@@ -11,6 +11,7 @@ const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   companyName: z.string().min(2, 'Company name must be at least 2 characters'),
+  verticalKey: z.string().optional(),
 })
 
 export async function POST(req: Request) {
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
       return badRequest(result.error.issues[0].message)
     }
 
-    const { firstName, lastName, email, password, companyName } = result.data
+    const { firstName, lastName, email, password, companyName, verticalKey } = result.data
 
     // 2. Check if user already exists
     const existingUser = await prisma.user.findFirst({
@@ -40,10 +41,12 @@ export async function POST(req: Request) {
 
     // Check if slug exists, if so append random
     let finalSlug = tenantSlug
-    const slugExists = await prisma.tenant.findUnique({ where: { slug: tenantSlug } })
-    if (slugExists) {
+    const slugCheck = await prisma.tenant.findUnique({ where: { slug: tenantSlug } })
+    if (slugCheck) {
         finalSlug = `${tenantSlug}-${Math.random().toString(36).substring(2, 7)}`
     }
+
+    const { applyVerticalTemplate } = await import('@/lib/apply-vertical-template')
 
     const newUser = await prisma.$transaction(async (tx) => {
       // Create Tenant
@@ -80,6 +83,11 @@ export async function POST(req: Request) {
           status: 'ACTIVE'
         }
       })
+
+      // NEW: Apply Industry Template
+      if (verticalKey) {
+        await applyVerticalTemplate(tx, tenant.id, verticalKey)
+      }
 
       return user
     })

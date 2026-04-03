@@ -84,6 +84,7 @@ export default function SettingsPage() {
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'appearance', label: 'Appearance', icon: Palette },
+    { id: 'custom-fields', label: 'Custom Fields', icon: Settings },
     { id: 'integrations', label: 'Integrations', icon: Globe },
     { id: 'email', label: 'Email Settings', icon: Mail },
   ]
@@ -354,6 +355,25 @@ export default function SettingsPage() {
                   {saved ? <><Check size={16} /> Saved!</> : <><Save size={16} /> Save Email Config</>}
                 </button>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'custom-fields' && (
+            <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+              <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: 'var(--surface-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+                 <Settings size={32} className="text-blue-500" />
+              </div>
+              <h2 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '12px' }}>Horizontal Custom Fields</h2>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', maxWidth: '440px', margin: '0 auto 32px', lineHeight: '1.6' }}>
+                Extend MultiCRM across verticals by creating industry-specific data points for your business entities.
+              </p>
+              <a 
+                href="/dashboard/settings/custom-fields" 
+                className="btn btn-primary"
+                style={{ padding: '12px 32px', fontSize: '14px', borderRadius: '10px' }}
+              >
+                Launch Field Builder
+              </a>
             </div>
           )}
         </div>

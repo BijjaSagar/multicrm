@@ -35,7 +35,9 @@ model Tenant {
   auditLogs   AuditLog[]
   emailTemplates EmailTemplate[]
   pipelines   Pipeline[]
-  customFields CustomField[]
+  customFieldDefinitions CustomFieldDefinition[]
+  customFieldValues CustomFieldValue[]
+  tenantModules TenantModule[]
   tags        Tag[]
   broadcasts  Broadcast[]
   workflows   Workflow[]
@@ -512,22 +514,47 @@ model TagRelation {
   @@map("tag_relations")
 }
 
-model CustomField {
+model CustomFieldDefinition {
   id          String   @id @default(cuid())
   tenantId    String
-  entity      String
-  fieldName   String
-  fieldLabel  String
-  fieldType   FieldType @default(TEXT)
-  isRequired  Boolean   @default(false)
-  options     Json?
-  order       Int       @default(0)
-  createdAt   DateTime  @default(now())
+  entityType  String   // "LEAD" | "DEAL" | "TICKET" | "CONTACT" | "PATIENT" etc.
+  fieldName   String   // e.g. "Blood Group", "Property Type"
+  fieldType   String   // "TEXT" | "NUMBER" | "DATE" | "DROPDOWN" | "CHECKBOX" | "PHONE"
+  options     Json?    // For DROPDOWN: ["Option A", "Option B"]
+  isRequired  Boolean  @default(false)
+  displayOrder Int      @default(0)
+  createdAt   DateTime @default(now())
+  
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  values      CustomFieldValue[]
+  
+  @@map("custom_field_definitions")
+}
 
-  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+model CustomFieldValue {
+  id          String   @id @default(cuid())
+  tenantId    String
+  fieldId     String
+  entityId    String   // The ID of the Lead, Deal, Ticket, etc.
+  value       String   // Always stored as string; cast on read
+  
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  field       CustomFieldDefinition @relation(fields: [fieldId], references: [id], onDelete: Cascade)
 
-  @@unique([tenantId, entity, fieldName])
-  @@map("custom_fields")
+  @@map("custom_field_values")
+}
+
+model TenantModule {
+  id          String   @id @default(cuid())
+  tenantId    String
+  moduleKey   String   // e.g. "SALES_PIPELINE", "STUDENT_MANAGEMENT"
+  isEnabled   Boolean  @default(true)
+  enabledAt   DateTime @default(now())
+  
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, moduleKey])
+  @@map("tenant_modules")
 }
 
 // ============================================================

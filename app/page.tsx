@@ -6,7 +6,7 @@ import {
   BarChart3, MessageSquare, Zap, Globe, Shield, Users, 
   ArrowRight, CheckCircle2, PlayCircle, Star, Menu, X,
   Github as GithubIcon, MessageCircle, ExternalLink, Mail,
-  Building2, Activity
+  Building2, Activity, Hotel, HeartPulse, GraduationCap, ShoppingBag, Layout
 } from 'lucide-react'
 
 // --- Custom Animations Helpers ---
@@ -71,7 +71,7 @@ export default function LandingPage() {
           </div>
 
           <div style={{ display: 'none', gap: '32px' }} className="desktop-menu">
-            {['Services', 'Features', 'Analytics', 'Enterprise', 'Contact'].map(link => (
+            {['Industries', 'Services', 'Analytics', 'Enterprise'].map(link => (
               <a key={link} href={`#${link.toLowerCase()}`} style={{ 
                 fontSize: '15px', 
                 fontWeight: 600, 
@@ -97,66 +97,49 @@ export default function LandingPage() {
               Sign In
             </Link>
             <Link href="/auth/register" style={{ 
-              backgroundColor: '#2563EB',
-              color: 'white',
-              padding: '12px 28px',
-              borderRadius: '12px',
-              fontSize: '15px',
-              fontWeight: 700,
+              backgroundColor: '#2563EB', 
+              padding: '12px 28px', 
+              borderRadius: '12px', 
+              fontSize: '15px', 
+              fontWeight: 800, 
+              color: 'white', 
               textDecoration: 'none',
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              boxShadow: '0 8px 20px rgba(37, 99, 235, 0.2)'
-            }} onMouseOver={e => {
-                e.currentTarget.style.transform = 'translateY(-2px)'
-                e.currentTarget.style.boxShadow = '0 12px 24px rgba(37, 99, 235, 0.25)'
-               }}
-               onMouseOut={e => {
-                e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = '0 8px 20px rgba(37, 99, 235, 0.2)'
-               }}>
+              transition: 'all 0.2s',
+              boxShadow: '0 8px 16px rgba(37, 99, 235, 0.12)'
+            }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#1D4ED8'}
+               onMouseOut={e => e.currentTarget.style.backgroundColor = '#2563EB'}>
               Get Started
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* Corporate Hero Section */}
       <section style={{ 
         paddingTop: '200px', 
-        paddingBottom: '140px', 
-        background: 'linear-gradient(180deg, #F8FAFC 0%, #FFFFFF 100%)',
-        textAlign: 'center',
-        position: 'relative'
+        paddingBottom: '120px', 
+        textAlign: 'center', 
+        position: 'relative',
+        background: 'radial-gradient(circle at top right, rgba(37, 99, 235, 0.05), transparent 40%), radial-gradient(circle at bottom left, rgba(37, 99, 235, 0.03), transparent 30%)'
       }}>
-        {/* Subtle Grid Background */}
-        <div style={{ 
-          position: 'absolute',
-          inset: 0,
-          backgroundImage: `radial-gradient(#E2E8F0 1px, transparent 1px)`,
-          backgroundSize: '40px 40px',
-          opacity: 0.4,
-          zIndex: 0
-        }} />
-
-        <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 24px', position: 'relative', zIndex: 1 }}>
+        <div className="container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
           <div style={{ 
             display: 'inline-flex', 
             alignItems: 'center', 
             gap: '8px', 
-            backgroundColor: '#DBEAFE',
-            padding: '8px 20px',
+            backgroundColor: '#EFF6FF', 
+            padding: '8px 16px', 
             borderRadius: '100px',
-            marginBottom: '32px',
+            marginBottom: '40px',
             border: '1px solid #BFDBFE'
           }}>
-            <Shield size={14} color="#2563EB" />
+            <Layout size={14} color="#2563EB" />
             <span style={{ fontSize: '13px', fontWeight: 800, color: '#1E40AF', letterSpacing: '0.8px', textTransform: 'uppercase' }}>
-              Enterprise Grade Multi-Tenant CRM
+              The Universal Horizontal Layer for Every Industry
             </span>
           </div>
 
           <h1 style={{ 
-            fontSize: 'max(52px, 5.5vw)', 
+            fontSize: 'max(52px, 5vw)', 
             fontWeight: 900, 
             lineHeight: 1.05, 
             letterSpacing: '-2.5px',
@@ -164,18 +147,18 @@ export default function LandingPage() {
             color: '#0F172A'
           }}>
             Scale Your Business with <br />
-            <span style={{ color: '#2563EB' }}>Intelligent Governance.</span>
+            <span style={{ color: '#2563EB' }}>Vertical-Intelligent Data.</span>
           </h1>
 
           <p style={{ 
             fontSize: '20px', 
             lineHeight: 1.6, 
             color: '#475569', 
-            maxWidth: '750px', 
+            maxWidth: '800px', 
             margin: '0 auto 48px',
             fontWeight: 500
           }}>
-            The professional choice for multi-branch management. Centralize operations, automate workflows, and drive consistent growth across every department with our secure, omnichannel platform.
+            The definitive multi-tenant CRM that autonomously adapts to your vertical. Whether you're in Real Estate, Healthcare, or Education, MultiCRM morphs to your industry metadata instantly.
           </p>
 
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
@@ -193,7 +176,7 @@ export default function LandingPage() {
                 transition: 'all 0.2s'
              }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#1D4ED8'}
                 onMouseOut={e => e.currentTarget.style.backgroundColor = '#2563EB'}>
-                Create Workspace <ArrowRight size={20} strokeWidth={2.5} />
+                Create Industry Workspace <ArrowRight size={20} strokeWidth={2.5} />
              </Link>
              <button style={{ 
                 padding: '20px 42px', 
@@ -210,8 +193,47 @@ export default function LandingPage() {
                 transition: 'all 0.2s'
              }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#F8FAFC'}
                 onMouseOut={e => e.currentTarget.style.backgroundColor = '#FFFFFF'}>
-                <PlayCircle size={20} color="#64748B" /> Watch Demo
+                <PlayCircle size={20} color="#64748B" /> Watch Platform Demo
              </button>
+          </div>
+        </div>
+      </section>
+
+      {/* NEW: Industry Verticals Section */}
+      <section id="industries" style={{ padding: '80px 0', borderTop: '1px solid #F1F5F9' }}>
+        <div className="container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+             <h2 style={{ fontSize: '36px', fontWeight: 900, marginBottom: '16px', color: '#0F172A' }}>One Platform, Multiple Verticals</h2>
+             <p style={{ color: '#64748B', fontSize: '18px', fontWeight: 500 }}>Select your industry and let MultiCRM autonomously provision your specialized schema.</p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
+            {[
+              { icon: Hotel, title: 'Real Estate', color: '#3B82F6', desc: 'Property management, lead scoring, and location-smart metadata.' },
+              { icon: HeartPulse, title: 'Healthcare', color: '#10B981', desc: 'Patient profiling, medical history tracking, and specialized consults.' },
+              { icon: GraduationCap, title: 'Education', color: '#F59E0B', desc: 'Course enrollment, student data management, and academic terms.' },
+              { icon: ShoppingBag, title: 'eCommerce', color: '#8B5CF6', desc: 'Shopping behavior, customer lifetime value, and order intelligence.' },
+            ].map((v, idx) => (
+              <div key={idx} className="card" style={{ 
+                padding: '32px', 
+                textAlign: 'center', 
+                borderRadius: '24px', 
+                border: '1px solid #E2E8F0', 
+                background: '#FFFFFF',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+              }}>
+                <div style={{ 
+                  width: '56px', height: '56px', borderRadius: '16px', 
+                  backgroundColor: `${v.color}10`, color: v.color,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  margin: '0 auto 20px'
+                }}>
+                   <v.icon size={28} />
+                </div>
+                <h3 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '12px' }}>{v.title}</h3>
+                <p style={{ fontSize: '14px', color: '#64748B', lineHeight: 1.6 }}>{v.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -221,38 +243,38 @@ export default function LandingPage() {
         <div className="container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
           <div style={{ textAlign: 'center', marginBottom: '80px' }}>
             <h2 style={{ fontSize: '42px', fontWeight: 900, marginBottom: '20px', color: '#0F172A', letterSpacing: '-1px' }}>
-              Advanced CRM Foundations
+              The Universal CRM Layer
             </h2>
-            <p style={{ color: '#64748B', fontSize: '18px', maxWidth: '600px', margin: '0 auto', fontWeight: 500 }}>
-              Purpose-built modules designed to streamline complex business structures and accelerate team productivity.
+            <p style={{ color: '#64748B', fontSize: '18px', maxWidth: '700px', margin: '0 auto', fontWeight: 500 }}>
+              Purpose-built horizontal modules that adapt their schema autonomously to your business vertical.
             </p>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '32px' }}>
             {[
               { 
-                icon: Building2, color: '#2563EB', title: 'Multi-Tenant Architecture', 
-                desc: 'Enterprise-grade workspace isolation with secure branch management and customized access policies.' 
+                icon: Layout, color: '#2563EB', title: 'Universal Data Schema', 
+                desc: 'Schema-less field architecture that evolves with your industry. Add custom metadata for any business model instantly.' 
               },
               { 
-                icon: Users, color: '#059669', title: 'Smart Lead Management', 
-                desc: 'Intelligent scoring and automated distribution engines that ensure high-priority leads are never missed.' 
+                icon: Shield, color: '#059669', title: 'Multi-Tenant Isolation', 
+                desc: 'Enterprise-grade workspace security. Your industry data is strictly siloed and encrypted at the tenant level.' 
               },
               { 
-                icon: MessageSquare, color: '#D97706', title: 'Omnichannel Operations', 
-                desc: 'A unified hub for WhatsApp, Email, and internal communications, built for high-touch service teams.' 
+                icon: Zap, color: '#D97706', title: 'Autonomous Provisioning', 
+                desc: 'Instant setup of industry-optimized workspaces. No complex configuration or development cycles required.' 
               },
               { 
-                icon: Activity, color: '#7C3AED', title: 'Performance Analytics', 
-                desc: 'Real-time data visualization across teams and branches, providing actionable insights into your growth.' 
+                icon: BarChart3, color: '#7C3AED', title: 'Cross-Vertical Analytics', 
+                desc: 'Pivot your performance data across industry-specific units (Sq Ft, Patient ID, ROAS, or Student ID).' 
               },
               { 
-                icon: Shield, color: '#0891B2', title: 'Security & Compliance', 
-                desc: 'Comprehensive audit trails and role-based permissions ensure data integrity across your entire organization.' 
+                icon: MessageSquare, color: '#0891B2', title: 'Omnichannel Context', 
+                desc: 'Maintain customer conversations enriched with industry metadata for unparalleled service delivery.' 
               },
               { 
-                icon: Globe, color: '#4F46E5', title: 'Global Connectivity', 
-                desc: 'Connect with clients worldwide through multi-language support and integrated global messaging APIs.' 
+                icon: Globe, color: '#4F46E5', title: 'Horizontal Scalability', 
+                desc: 'Expand from one branch to one hundred with a single, horizontal core that scales with your ambition.' 
               }
             ].map((module, i) => (
               <div key={i} className="card" style={{ 
@@ -441,7 +463,7 @@ export default function LandingPage() {
                       </span>
                    </div>
                    <p style={{ color: '#64748B', lineHeight: 1.7, maxWidth: '340px', fontSize: '15px', fontWeight: 500 }}>
-                      The professional infrastructure for omnichannel business growth. Secure, scalable, and built for the modern enterprise.
+                      The universal horizontal infrastructure for vertical-intelligent business growth. Secure, scalable, and built for the modern enterprise.
                    </p>
                    <div style={{ display: 'flex', gap: '20px', marginTop: '40px' }}>
                       <div style={{ color: '#94A3B8', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = '#2563EB'} onMouseOut={e => e.currentTarget.style.color = '#94A3B8'}><GithubIcon size={22} /></div>
@@ -453,8 +475,8 @@ export default function LandingPage() {
                    <div key={i}>
                       <h4 style={{ fontWeight: 800, marginBottom: '28px', color: '#0F172A', fontSize: '15px', textTransform: 'uppercase', letterSpacing: '1px' }}>{title}</h4>
                       <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                         {['Sales Engine', 'Support Suite', 'Analytics', 'Integration'].map(item => (
-                           <li key={item} style={{ color: '#64748B', fontSize: '15px', cursor: 'pointer', fontWeight: 500, transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = '#2563EB'} onMouseOut={e => e.currentTarget.style.color = '#64748B'}>{item}</li>
+                         {(i === 0 ? ['Real Estate', 'Healthcare', 'Education', 'eCommerce', 'Enterprise'] : i === 1 ? ['Documentation', 'API Reference', 'User Guides', 'Security'] : ['About Us', 'Careers', 'Brand Kit', 'Contact']).map(item => (
+                            <li key={item} style={{ color: '#64748B', fontSize: '15px', cursor: 'pointer', fontWeight: 500, transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = '#2563EB'} onMouseOut={e => e.currentTarget.style.color = '#64748B'}>{item}</li>
                          ))}
                       </ul>
                    </div>

@@ -11,7 +11,13 @@ import {
   Shield,
   Zap,
   Globe,
-  Activity
+  Activity,
+  Hotel,
+  HeartPulse,
+  GraduationCap,
+  ShoppingBag,
+  Globe2,
+  Layout
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -24,7 +30,8 @@ export default function RegisterPage() {
     lastName: '',
     email: '',
     password: '',
-    companyName: ''
+    companyName: '',
+    verticalKey: 'GENERAL'
   })
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
@@ -150,6 +157,28 @@ export default function RegisterPage() {
                   width: '100%', padding: '14px 16px 14px 48px', borderRadius: '12px', border: '1px solid #E2E8F0',
                   backgroundColor: '#F8FAFC', fontSize: '15px'
                 }} value={formData.companyName} onChange={e => setFormData({...formData, companyName: e.target.value})} placeholder="Microsoft India" />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{ fontSize: '14px', fontWeight: 800, color: '#475569' }}>Primary Business Vertical</label>
+              <div style={{ position: 'relative' }}>
+                <Layout size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+                <select 
+                  required 
+                  style={{ 
+                    width: '100%', padding: '14px 16px 14px 48px', borderRadius: '12px', border: '1px solid #E2E8F0',
+                    backgroundColor: '#F8FAFC', fontSize: '15px', appearance: 'none'
+                  }} 
+                  value={formData.verticalKey} 
+                  onChange={e => setFormData({...formData, verticalKey: e.target.value})}
+                >
+                  <option value="GENERAL">General Business (Horizontal)</option>
+                  <option value="REAL_ESTATE">Real Estate (Residential/Luxury)</option>
+                  <option value="HEALTHCARE">Healthcare (Clinics/Diagnostic)</option>
+                  <option value="EDUCATION">Education (Courses/Schools)</option>
+                  <option value="ECOMMERCE">eCommerce (Stores/Supplies)</option>
+                </select>
               </div>
             </div>
 

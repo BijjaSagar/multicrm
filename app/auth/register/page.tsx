@@ -19,9 +19,48 @@ export default function RegisterPage() {
   const [mounted, setMounted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    companyName: ''
+  })
+  const [error, setError] = useState('')
+  const [successMsg, setSuccessMsg] = useState('')
+
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError('')
+    
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+      
+      const data = await res.json()
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'Registration failed')
+      }
+      
+      setSuccessMsg('Account authorized! Redirecting to login...')
+      setTimeout(() => {
+        window.location.href = '/auth/login'
+      }, 2000)
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const benefits = [
     { icon: Shield, title: 'Enterprise Security', desc: 'Bank-grade data protection' },
@@ -99,21 +138,35 @@ export default function RegisterPage() {
           <h2 style={{ fontSize: '32px', fontWeight: 900, color: '#0F172A', marginBottom: '12px' }}>Request Workspace Access</h2>
           <p style={{ fontSize: '16px', color: '#64748B', marginBottom: '40px', fontWeight: 500 }}>Join the ecosystem of elite enterprise teams.</p>
 
-          <form style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {error && <div style={{ padding: '16px', backgroundColor: '#FEF2F2', border: '1px solid #FEE2E2', borderRadius: '12px', color: '#B91C1C', marginBottom: '24px', fontSize: '14px', fontWeight: 700 }}>{error}</div>}
+          {successMsg && <div style={{ padding: '16px', backgroundColor: '#F0FDF4', border: '1px solid #DCFCE7', borderRadius: '12px', color: '#15803D', marginBottom: '24px', fontSize: '14px', fontWeight: 700 }}>{successMsg}</div>}
+
+          <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{ fontSize: '14px', fontWeight: 800, color: '#475569' }}>Company / Organization Name</label>
+              <div style={{ position: 'relative' }}>
+                <Building2 size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+                <input required style={{ 
+                  width: '100%', padding: '14px 16px 14px 48px', borderRadius: '12px', border: '1px solid #E2E8F0',
+                  backgroundColor: '#F8FAFC', fontSize: '15px'
+                }} value={formData.companyName} onChange={e => setFormData({...formData, companyName: e.target.value})} placeholder="Microsoft India" />
+              </div>
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <label style={{ fontSize: '14px', fontWeight: 800, color: '#475569' }}>First Name</label>
-                <input style={{ 
+                <input required style={{ 
                   padding: '14px 16px', borderRadius: '12px', border: '1px solid #E2E8F0',
                   backgroundColor: '#F8FAFC', fontSize: '15px'
-                }} placeholder="Satya" />
+                }} value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} placeholder="Satya" />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <label style={{ fontSize: '14px', fontWeight: 800, color: '#475569' }}>Last Name</label>
-                <input style={{ 
+                <input required style={{ 
                   padding: '14px 16px', borderRadius: '12px', border: '1px solid #E2E8F0',
                   backgroundColor: '#F8FAFC', fontSize: '15px'
-                }} placeholder="Nadella" />
+                }} value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} placeholder="Nadella" />
               </div>
             </div>
 
@@ -121,31 +174,32 @@ export default function RegisterPage() {
               <label style={{ fontSize: '14px', fontWeight: 800, color: '#475569' }}>Corporate Email</label>
               <div style={{ position: 'relative' }}>
                 <Mail size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
-                <input style={{ 
+                <input required type="email" style={{ 
                   width: '100%', padding: '14px 16px 14px 48px', borderRadius: '12px', border: '1px solid #E2E8F0',
                   backgroundColor: '#F8FAFC', fontSize: '15px'
-                }} placeholder="ceo@microsoft.com" />
+                }} value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="ceo@microsoft.com" />
               </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '14px', fontWeight: 800, color: '#475569' }}>Password Requirement</label>
+              <label style={{ fontSize: '14px', fontWeight: 800, color: '#475569' }}>Secure Password</label>
               <div style={{ position: 'relative' }}>
                 <Lock size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
-                <input type="password" style={{ 
+                <input required type="password" style={{ 
                   width: '100%', padding: '14px 16px 14px 48px', borderRadius: '12px', border: '1px solid #E2E8F0',
                   backgroundColor: '#F8FAFC', fontSize: '15px'
-                }} placeholder="Create secure password" />
+                }} value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} placeholder="••••••••" />
               </div>
             </div>
 
-            <button style={{ 
+            <button disabled={isLoading} style={{ 
               marginTop: '12px', width: '100%', padding: '18px', backgroundColor: '#2563EB',
               color: 'white', borderRadius: '14px', border: 'none', fontWeight: 800, fontSize: '16px',
               boxShadow: '0 10px 20px rgba(37, 99, 235, 0.2)', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px'
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
+              opacity: isLoading ? 0.5 : 1
             }}>
-              Generate Access Token <ArrowRight size={20} strokeWidth={2.5} />
+              {isLoading ? 'Processing Authorization...' : <>Generate Access Token <ArrowRight size={20} strokeWidth={2.5} /></>}
             </button>
           </form>
 

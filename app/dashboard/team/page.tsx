@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import {
-  Users, Search, Mail, Phone, Shield,
+  Users, Search, Mail, Phone, Shield, Plus,
   Loader2, RefreshCw, AlertCircle, Building2,
 } from 'lucide-react'
 
@@ -60,11 +60,16 @@ export default function TeamPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Users size={24} style={{ color: '#6366F1' }} /> Team
+            <Users size={24} style={{ color: '#6366F1' }} /> Team members
           </h1>
-          <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>{active.length} active members</p>
+          <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>Total {members.length} members ({active.length} active)</p>
         </div>
-        <button className="btn btn-secondary btn-sm" onClick={fetchTeam}><RefreshCw size={14} /></button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="btn btn-secondary btn-sm" onClick={fetchTeam} title="Refresh list"><RefreshCw size={14} /></button>
+          <button className="btn btn-primary btn-sm" onClick={() => alert('Invite System: Redirecting to invite form...')} style={{ gap: '8px' }}>
+            <Plus size={16} /> Invite Member
+          </button>
+        </div>
       </div>
 
       {/* Search */}

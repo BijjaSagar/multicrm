@@ -11,8 +11,15 @@ export async function GET(request: NextRequest) {
     const params = parseSearchParams(request.url)
     const { search } = params
 
-    // Expand role access
-    const allowedRoles = ['SUPER_ADMIN', 'TENANT_ADMIN', 'BRANCH_MANAGER', 'SALES_MANAGER', 'SUPPORT_MANAGER']
+    // Expand role access to include Support Agents for viewing
+    const allowedRoles = [
+      'SUPER_ADMIN', 
+      'TENANT_ADMIN', 
+      'BRANCH_MANAGER', 
+      'SALES_MANAGER', 
+      'SUPPORT_MANAGER',
+      'SUPPORT_AGENT'
+    ]
     if (!allowedRoles.includes(role)) {
       return unauthorized('You do not have permission to view team members.')
     }

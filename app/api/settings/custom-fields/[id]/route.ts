@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import prisma from '@/lib/prisma'
 import { success, unauthorized, badRequest, serverError } from '@/lib/api-utils'
@@ -8,8 +8,8 @@ import { success, unauthorized, badRequest, serverError } from '@/lib/api-utils'
  * Remove a custom field definition.
  */
 export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth()
   if (!session) return unauthorized()
@@ -17,7 +17,7 @@ export async function DELETE(
     return badRequest('Only admins can manage custom fields')
   }
 
-  const { id } = params
+  const { id } = await params
 
   try {
     // Ensure the field belongs to the tenant

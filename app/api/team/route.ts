@@ -7,15 +7,23 @@ export async function GET(request: NextRequest) {
     const session = await getAuthSession()
     if (!session) return unauthorized()
 
-    const { tenantId, role } = session.user
+    const { tenantId, role, branchId } = session.user
     const params = parseSearchParams(request.url)
     const { search } = params
 
-    if (!['SUPER_ADMIN', 'TENANT_ADMIN', 'BRANCH_MANAGER', 'SALES_MANAGER'].includes(role)) {
-      return unauthorized()
+    // Expand role access
+    const allowedRoles = ['SUPER_ADMIN', 'TENANT_ADMIN', 'BRANCH_MANAGER', 'SALES_MANAGER', 'SUPPORT_MANAGER']
+    if (!allowedRoles.includes(role)) {
+      return unauthorized('You do not have permission to view team members.')
     }
 
-    const where: Record<string, unknown> = { tenantId }
+    const where: any = { tenantId }
+    
+    // If branch manager, only show their branch
+    if (role === 'BRANCH_MANAGER' && branchId) {
+      where.branchId = branchId
+    }
+
     if (search) {
       where.OR = [
         { firstName: { contains: search } },
@@ -51,6 +59,7 @@ export async function GET(request: NextRequest) {
 
     return success({ users })
   } catch (error) {
+    console.error('TEAM_FETCH_ERROR:', error)
     return serverError(error)
   }
 }

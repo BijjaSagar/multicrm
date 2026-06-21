@@ -2,6 +2,7 @@ import { getAuthSession, unauthorized, success, serverError, badRequest, notFoun
 import prisma from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
 import { NextRequest } from 'next/server'
+import { Prisma } from '@prisma/client'
 
 export async function POST(
   request: NextRequest,
@@ -31,10 +32,10 @@ export async function POST(
 
     if (!defaultPipeline || !defaultPipeline.stages[0]) {
        return badRequest('No default pipeline or pipeline stage found. Please configure a pipeline first.')
-    }
+     }
 
     // 3. Start a transaction for the conversion
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // 3a. Create or get Contact
       let contactId = lead.contact?.id
       if (!contactId) {

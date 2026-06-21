@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma'
 import { slugify } from '@/lib/utils'
 import { success, badRequest, serverError } from '@/lib/api-utils'
 import { z } from 'zod'
+import { Prisma } from '@prisma/client'
 
 const registerSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
@@ -48,7 +49,7 @@ export async function POST(req: Request) {
 
     const { applyVerticalTemplate } = await import('@/lib/apply-vertical-template')
 
-    const newUser = await prisma.$transaction(async (tx) => {
+    const newUser = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Create Tenant
       const tenant = await tx.tenant.create({
         data: {

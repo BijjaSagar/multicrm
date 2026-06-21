@@ -177,6 +177,7 @@ export default function RegisterPage() {
                   <option value="REAL_ESTATE">Real Estate (Residential/Luxury)</option>
                   <option value="HEALTHCARE">Healthcare (Clinics/Diagnostic)</option>
                   <option value="EDUCATION">Education (Courses/Schools)</option>
+                  <option value="DISTANCE_EDUCATION">Distance Education (LSC Admissions)</option>
                   <option value="ECOMMERCE">eCommerce (Stores/Supplies)</option>
                 </select>
               </div>

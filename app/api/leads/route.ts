@@ -46,6 +46,35 @@ export async function GET(request: NextRequest) {
       prisma.lead.count({ where }),
     ])
 
+    // Fetch custom field values for these leads
+    const leadIds = leads.map(l => l.id)
+    const customValues = leadIds.length > 0 ? await prisma.customFieldValue.findMany({
+      where: {
+        entityId: { in: leadIds },
+        tenantId
+      },
+      include: {
+        field: {
+          select: { fieldName: true, fieldType: true }
+        }
+      }
+    }) : []
+
+    // Group custom values by lead ID
+    const valuesByLead: Record<string, Record<string, string>> = {}
+    customValues.forEach(val => {
+      if (!valuesByLead[val.entityId]) {
+        valuesByLead[val.entityId] = {}
+      }
+      valuesByLead[val.entityId][val.field.fieldName] = val.value
+    })
+
+    // Attach custom values to leads
+    const leadsWithCustomFields = leads.map(l => ({
+      ...l,
+      customFields: valuesByLead[l.id] || {}
+    }))
+
     // Aggregate stats
     const stats = await prisma.lead.groupBy({
       by: ['status'],
@@ -55,7 +84,7 @@ export async function GET(request: NextRequest) {
     })
 
     return success({
-      leads,
+      leads: leadsWithCustomFields,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
       stats,
     })
@@ -112,6 +141,32 @@ export async function POST(request: NextRequest) {
         branch: { select: { id: true, name: true } },
       },
     })
+
+    // Atomic Custom Fields Saving
+    if (body.customFields && typeof body.customFields === 'object') {
+      const fieldDefs = await prisma.customFieldDefinition.findMany({
+        where: { tenantId }
+      })
+      
+      const customFieldValues = []
+      for (const [key, val] of Object.entries(body.customFields)) {
+        const def = fieldDefs.find(d => d.id === key || d.fieldName.toLowerCase() === key.toLowerCase())
+        if (def && val !== undefined && val !== null) {
+          customFieldValues.push({
+            tenantId,
+            fieldId: def.id,
+            entityId: lead.id,
+            value: String(val)
+          })
+        }
+      }
+      
+      if (customFieldValues.length > 0) {
+        await prisma.customFieldValue.createMany({
+          data: customFieldValues
+        })
+      }
+    }
 
     // Auto-calculate initial score
     await calculateLeadScore(lead.id)

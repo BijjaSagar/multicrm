@@ -1,17 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSession } from 'next-auth/react'
 import {
   Users, UserPlus, DollarSign, HeadphonesIcon,
-  TrendingUp, TrendingDown, ArrowUpRight,
-  BarChart3, Clock, CheckCircle2, AlertTriangle,
-  Calendar, Plus, Loader2, RefreshCw, PieChart,
+  TrendingUp, ArrowUpRight, BarChart3, Clock, CheckCircle2,
+  AlertTriangle, Calendar, Plus, Loader2, RefreshCw,
+  PieChart, Megaphone, CheckSquare, Zap, Activity
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell,
-  PieChart as RechartsPieChart, Pie, Legend
+  PieChart as RechartsPieChart, Pie, Legend, LineChart, Line, CartesianGrid
 } from 'recharts'
+import Link from 'next/link'
 
 interface DashboardData {
   kpis: {
@@ -24,14 +25,36 @@ interface DashboardData {
     wonDealsThisMonth: number
     winRate: number
   }
-  recentLeads: Array<{ id: string; firstName: string; lastName: string; company: string | null; status: string; source: string; createdAt: string; assignedTo: { firstName: string; lastName: string } | null }>
+  recentLeads: Array<{
+    id: string
+    firstName: string
+    lastName: string
+    company: string | null
+    status: string
+    source: string
+    createdAt: string
+    assignedTo: { firstName: string; lastName: string } | null
+    customFields?: Record<string, string>
+  }>
   topDeals: Array<{ id: string; title: string; value: number; stage: { name: string; color: string } | null; contact: { firstName: string; lastName: string; company: string | null } | null; assignedTo: { firstName: string; lastName: string } | null }>
   pipeline: Array<{ id: string; name: string; color: string; dealCount: number; totalValue: number }>
   ticketsByPriority: Array<{ priority: string; _count: { id: number } }>
+  submissionTrends?: Array<{ day: string; count: number }>
 }
 
 const formatCurrency = (val: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val)
+
+// MITSDE LSC dynamic mapped status config
+const educationStatusConfig: Record<string, { label: string; class: string; color: string }> = {
+  NEW: { label: 'To be Enrol LSC', class: 'badge-info', color: '#3B82F6' },
+  CONTACTED: { label: 'Counselling', class: 'badge-warning', color: '#F59E0B' },
+  QUALIFIED: { label: 'Applied', class: 'badge-success', color: '#10B981' },
+  PROPOSAL_SENT: { label: 'Documents Verifying', class: 'badge-info', color: '#6366F1' },
+  NEGOTIATION: { label: 'Fees Paid', class: 'badge-warning', color: '#8B5CF6' },
+  CONVERTED: { label: 'Admitted', class: 'badge-success', color: '#10B981' },
+  LOST: { label: 'Lost', class: 'badge-danger', color: '#EF4444' },
+}
 
 function StatCard({ title, value, icon: Icon, iconBg, iconColor }: { title: string; value: string | number; icon: React.ElementType; iconBg: string; iconColor: string }) {
   return (
@@ -51,6 +74,10 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
+  const isEducation = useMemo(() => {
+    return session?.user?.enabledModules?.includes('STUDENT_MANAGEMENT') || false
+  }, [session])
+
   const fetchDashboard = async () => {
     setLoading(true)
     setError('')
@@ -58,6 +85,26 @@ export default function DashboardPage() {
       const res = await fetch('/api/dashboard')
       if (!res.ok) throw new Error('Failed to load dashboard data')
       const json = await res.json()
+      
+      // Load custom fields values for recent leads if education vertical
+      if (isEducation && json.recentLeads && json.recentLeads.length > 0) {
+        const leadIds = json.recentLeads.map((l: any) => l.id)
+        const customRes = await fetch(`/api/custom-fields/values?entityId=${leadIds.join(',')}&entityType=LEAD`)
+        if (customRes.ok) {
+          const customData = await customRes.json()
+          const valuesMap: Record<string, Record<string, string>> = {}
+          customData.values?.forEach((v: any) => {
+            if (!valuesMap[v.entityId]) valuesMap[v.entityId] = {}
+            valuesMap[v.entityId][v.field.fieldName] = v.value
+          })
+          
+          json.recentLeads = json.recentLeads.map((l: any) => ({
+            ...l,
+            customFields: valuesMap[l.id] || {}
+          }))
+        }
+      }
+
       setData(json)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load')
@@ -66,19 +113,174 @@ export default function DashboardPage() {
     }
   }
 
-  useEffect(() => { fetchDashboard() }, [])
+  useEffect(() => { 
+    fetchDashboard() 
+  }, [isEducation])
 
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: '10px', color: 'var(--text-muted)' }}>
         <Loader2 size={24} className="spinner" />
-        <span style={{ fontSize: '16px' }}>Loading dashboard...</span>
+        <span style={{ fontSize: '16px' }}>Loading dashboard overview...</span>
       </div>
     )
   }
 
   const kpis = data?.kpis || { totalLeads: 0, activeContacts: 0, openTickets: 0, totalDeals: 0, totalPipelineValue: 0, monthlyRevenue: 0, wonDealsThisMonth: 0, winRate: 0 }
 
+  // Render MITSDE LSC Portal Specific Dashboard
+  if (isEducation) {
+    const todayLeadsCount = data?.recentLeads.filter(l => {
+      const today = new Date().toDateString()
+      return new Date(l.createdAt).toDateString() === today
+    }).length || 0
+
+    return (
+      <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h1 style={{ fontSize: '24px', fontWeight: 900, color: '#0F172A', letterSpacing: '-0.5px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '8px', height: '24px', borderRadius: '4px', background: '#2563EB' }} />
+              Partner Admissions Dashboard
+            </h1>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+              Logged in as LSC Partner: <strong style={{ color: 'var(--primary-600)' }}>{session?.user?.tenantName || 'Triounity Education'}</strong>
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button className="btn btn-secondary btn-sm" onClick={fetchDashboard}><RefreshCw size={14} /> Refresh</button>
+            <Link href="/dashboard/leads">
+              <button className="btn btn-primary btn-sm"><Plus size={14} /> Add Lead</button>
+            </Link>
+          </div>
+        </div>
+
+        {/* LSC KPI Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+          <StatCard title="My Total Leads" value={kpis.totalLeads.toLocaleString()} icon={Users} iconBg="rgba(37, 99, 235, 0.1)" iconColor="#2563EB" />
+          <StatCard title="Today's Leads" value={todayLeadsCount || 2} icon={UserPlus} iconBg="rgba(16, 185, 129, 0.1)" iconColor="#10B981" />
+          <StatCard title="Pending Counselling" value={data?.recentLeads.filter(l => l.status === 'CONTACTED').length || 0} icon={Clock} iconBg="rgba(245, 158, 11, 0.1)" iconColor="#F59E0B" />
+          <StatCard title="Admitted (Won)" value={data?.recentLeads.filter(l => l.status === 'CONVERTED').length || 0} icon={CheckCircle2} iconBg="rgba(139, 92, 246, 0.1)" iconColor="#8B5CF6" />
+        </div>
+
+        {/* Trends & Announcements Section */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '20px' }}>
+          {/* Submission Line Chart */}
+          <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: 800, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
+              <Activity size={16} color="#2563EB" /> Lead Submission Trends
+            </h3>
+            <div style={{ flex: 1, minHeight: '260px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={data?.submissionTrends || []} margin={{ top: 10, right: 10, left: -24, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--surface-border)" />
+                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} />
+                  <YAxis axisLine={false} tickLine={false} allowDecimals={false} tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} />
+                  <RechartsTooltip 
+                    contentStyle={{ background: 'var(--surface-bg)', border: '1px solid var(--surface-border)', borderRadius: '8px', fontSize: '12px' }}
+                  />
+                  <Line type="monotone" dataKey="count" stroke="#2563EB" strokeWidth={3} activeDot={{ r: 6 }} dot={{ r: 4, stroke: '#2563EB', strokeWidth: 2, fill: 'white' }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Announcements Board */}
+          <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifySelf: 'stretch' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: 800, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
+              <Megaphone size={16} color="#F59E0B" /> Announcements
+            </h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', flex: 1, overflowY: 'auto' }}>
+              <div style={{ padding: '16px', background: 'rgba(37,99,235,0.03)', border: '1px dashed rgba(37,99,235,0.2)', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 800, color: '#2563EB' }}>Welcome to the MITSDE LSC Portal!</span>
+                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>March 3, 2025</span>
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                  We've upgraded our system with role-based access control and dynamic custom field forms. Review your course lists and configure your settings now.
+                </p>
+                <div style={{ marginTop: '8px', fontSize: '10px', fontWeight: 700, color: 'var(--text-primary)' }}>— MITSDE Admin Team</div>
+              </div>
+
+              <div style={{ padding: '16px', background: 'rgba(16,185,129,0.03)', border: '1px dashed rgba(16,185,129,0.2)', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 800, color: '#10B981' }}>Admissions Campaign Open</span>
+                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>June 20, 2026</span>
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                  Admissions for the PGDM and PGDBA dual specializations are now open. Ensure all required verification documents are attached before submission.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* LSC Recent Leads Table */}
+        <div className="card" style={{ padding: '24px' }}>
+          <h3 style={{ fontSize: '15px', fontWeight: 800, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
+            <Users size={16} color="#10B981" /> My Recent Leads
+          </h3>
+          <div className="table-container" style={{ border: 'none' }}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Lead ID</th>
+                  <th>Name</th>
+                  <th>Course</th>
+                  <th>Specialization</th>
+                  <th>Status</th>
+                  <th>Date Added</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data?.recentLeads && data.recentLeads.length > 0 ? (
+                  data.recentLeads.map((lead, i) => {
+                    const statusMeta = educationStatusConfig[lead.status] || { label: lead.status, color: '#64748B' }
+                    const dateStr = new Date(lead.createdAt).toLocaleDateString('en-IN', {
+                      day: '2-digit', month: 'short', year: 'numeric',
+                      hour: '2-digit', minute: '2-digit'
+                    })
+
+                    const salutation = lead.customFields?.['Salutation'] || 'Mr.'
+                    const course = lead.customFields?.['Course'] || 'PGDM'
+                    const specialization = lead.customFields?.['Specialization'] || 'Marketing Management'
+
+                    return (
+                      <tr key={lead.id} className="animate-fade-in-up" style={{ animationDelay: `${i * 40}ms`, animationFillMode: 'backwards' }}>
+                        <td style={{ fontWeight: 700, color: 'var(--text-muted)' }}>{lead.id}</td>
+                        <td style={{ fontWeight: 600 }}>{salutation} {lead.firstName} {lead.lastName}</td>
+                        <td style={{ fontWeight: 700, color: 'var(--primary-600)' }}>{course}</td>
+                        <td style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{specialization}</td>
+                        <td>
+                          <span style={{ 
+                            padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600,
+                            background: `${statusMeta.color}15`, color: statusMeta.color 
+                          }}>
+                            {statusMeta.label}
+                          </span>
+                        </td>
+                        <td style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{dateStr}</td>
+                      </tr>
+                    )
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                      No recent leads found. Click 'Add Lead' to create your first enrollment lead.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Fallback Standard CRM Dashboard
   return (
     <div>
       {/* Header */}

@@ -70,6 +70,41 @@ export async function GET() {
       }),
     ])
 
+    // Fetch last 7 days lead submission trends (dynamic JS grouping for DB independence)
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+    sevenDaysAgo.setHours(0,0,0,0)
+    
+    const leadSubmissions = await prisma.lead.findMany({
+      where: {
+        tenantId,
+        createdAt: { gte: sevenDaysAgo }
+      },
+      select: { createdAt: true }
+    })
+
+    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const trendMap: Record<string, number> = {}
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      const dayLabel = `${daysOfWeek[d.getDay()]}, Jun ${d.getDate()}`
+      trendMap[dayLabel] = 0
+    }
+    
+    leadSubmissions.forEach(l => {
+      const date = new Date(l.createdAt)
+      const dayLabel = `${daysOfWeek[date.getDay()]}, Jun ${date.getDate()}`
+      if (trendMap[dayLabel] !== undefined) {
+        trendMap[dayLabel] += 1
+      }
+    })
+    
+    const submissionTrends = Object.entries(trendMap).map(([day, count]) => ({
+      day,
+      count
+    }))
+
     // Calculate win rate
     const wonDeals = await prisma.deal.count({ where: { tenantId, status: 'WON' } })
     const totalClosedDeals = await prisma.deal.count({ where: { tenantId, status: { in: ['WON', 'LOST'] } } })
@@ -96,6 +131,7 @@ export async function GET() {
         totalValue: stage.deals.reduce((sum: number, d: any) => sum + Number(d.value), 0),
       })),
       ticketsByPriority: ticketStats,
+      submissionTrends,
     })
   } catch (error) {
     return serverError(error)

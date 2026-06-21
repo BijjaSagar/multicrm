@@ -131,4 +131,31 @@ export const VERTICAL_TEMPLATES: Record<string, VerticalTemplate> = {
       { entityType: 'DEAL', fieldName: 'Warranty Status', fieldType: 'DROPDOWN', isRequired: false, options: ['In Warranty', 'Out of Warranty', 'AMC'] },
     ],
   },
+  DISTANCE_EDUCATION: {
+    name: 'Distance Education',
+    description: 'LSC Admissions, student enrollment, and course tracking.',
+    modules: ['STUDENT_MANAGEMENT', 'BILLING_INVOICES', 'CAMPAIGN_MANAGER'],
+    pipelineStages: [
+      { name: 'To be Enrol LSC', color: '#3B82F6', probability: 10 },
+      { name: 'Counselling', color: '#F59E0B', probability: 30 },
+      { name: 'Applied', color: '#6366F1', probability: 60 },
+      { name: 'Documents Verifying', color: '#8B5CF6', probability: 80 },
+      { name: 'Fees Paid', color: '#10B981', probability: 90 },
+      { name: 'Admitted', color: '#10B981', probability: 100 },
+    ],
+    customFields: [
+      { entityType: 'LEAD', fieldName: 'Salutation', fieldType: 'DROPDOWN', isRequired: true, options: ['Mr.', 'Ms.', 'Mrs.', 'M/s.'] },
+      { entityType: 'LEAD', fieldName: 'Gender', fieldType: 'DROPDOWN', isRequired: true, options: ['Male', 'Female', 'Other'] },
+      { entityType: 'LEAD', fieldName: 'Course', fieldType: 'DROPDOWN', isRequired: true, options: ['Dual Program', 'PGDM', 'PGDBA', 'PGCM', 'PGDM-Executive', 'SQL Power Bi Certification', 'PCP', 'Gen Al for Educators Program'] },
+      { entityType: 'LEAD', fieldName: 'Specialization', fieldType: 'DROPDOWN', isRequired: true, options: [
+        'Construction and Project Management', 'Marketing Management', 'Operations Management',
+        'Finance Management', 'Human Resource Management', 'Project Management',
+        'Information Technology', 'Material Management', 'Logistics & Supply chain Management',
+        'Banking & Financial Services'
+      ] },
+      { entityType: 'LEAD', fieldName: 'Dual Specialization', fieldType: 'TEXT', isRequired: false },
+      { entityType: 'LEAD', fieldName: 'Password', fieldType: 'TEXT', isRequired: true },
+      { entityType: 'LEAD', fieldName: 'Is Referral', fieldType: 'DROPDOWN', isRequired: true, options: ['No', 'Yes'] }
+    ]
+  },
 }

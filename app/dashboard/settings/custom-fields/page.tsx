@@ -245,15 +245,30 @@ export default function CustomFieldsSettings() {
                   </div>
                 </div>
 
-                {field.options && (
-                  <div style={{ flex: 2, display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                    {JSON.parse(field.options).map((opt: string, i: number) => (
-                      <span key={i} style={{ fontSize: '11px', background: 'var(--surface-subtle)', padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--surface-border)' }}>
-                        {opt}
-                      </span>
-                    ))}
-                  </div>
-                )}
+                {field.options && (() => {
+                  const rawOpts = field.options as any
+                  let optionsList: string[] = []
+                  if (rawOpts) {
+                    if (typeof rawOpts === 'string') {
+                      try {
+                        optionsList = JSON.parse(rawOpts)
+                      } catch (e) {
+                        optionsList = []
+                      }
+                    } else if (Array.isArray(rawOpts)) {
+                      optionsList = rawOpts
+                    }
+                  }
+                  return (
+                    <div style={{ flex: 2, display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                      {optionsList.map((opt: string, i: number) => (
+                        <span key={i} style={{ fontSize: '11px', background: 'var(--surface-subtle)', padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--surface-border)' }}>
+                          {opt}
+                        </span>
+                      ))}
+                    </div>
+                  )
+                })()}
 
                 <button 
                   onClick={() => handleDelete(field.id)}

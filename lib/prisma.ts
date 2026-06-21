@@ -6,7 +6,7 @@ const globalForPrisma = globalThis as unknown as {
 
 function createPrismaClient() {
   const databaseUrl = process.env.DATABASE_URL
-  
+
   if (!databaseUrl) {
     throw new Error('DATABASE_URL environment variable is not set')
   }
@@ -20,15 +20,15 @@ function createPrismaClient() {
       }
     }) as unknown as PrismaClient
   }
-  
+
   try {
     // Parse DATABASE_URL
     const url = new URL(databaseUrl)
-    
+
     // AWS RDS MySQL passwords often contain special characters like '!'
     // We must ensure the password is correctly encoded for the driver
     const password = decodeURIComponent(url.password)
-    
+
     // Use dynamic require to prevent MariaDB driver from being bundled for Edge
     const { PrismaMariaDb } = require('@prisma/adapter-mariadb')
     const adapter = new PrismaMariaDb({
@@ -39,9 +39,9 @@ function createPrismaClient() {
       database: url.pathname.slice(1),
       connectionLimit: 10,
       idleTimeout: 30000,
-      connectTimeout: 10000, 
+      connectTimeout: 10000,
     })
-    
+
     console.log('Prisma RDS Client initialized for host:', url.hostname)
     return new PrismaClient({ adapter })
   } catch (error) {

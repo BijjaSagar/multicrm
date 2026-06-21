@@ -613,7 +613,11 @@ export default function LeadsPage() {
 
                     return (
                       <tr key={lead.id}>
-                        <td style={{ fontWeight: 700, color: 'var(--text-muted)' }}>{lead.id}</td>
+                        <td style={{ fontWeight: 700 }}>
+                          <Link href={`/dashboard/leads/${lead.id}`} style={{ color: 'var(--primary-600)', textDecoration: 'underline' }} title={lead.id}>
+                            {lead.id.substring(0, 8)}...
+                          </Link>
+                        </td>
                         <td style={{ fontWeight: 600 }}>{salutation} {lead.firstName} {lead.lastName}</td>
                         <td style={{ color: 'var(--text-secondary)' }}>{lead.email || '—'}</td>
                         <td>{lead.phone || '—'}</td>
@@ -623,7 +627,8 @@ export default function LeadsPage() {
                         <td>
                           <span style={{ 
                             padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600,
-                            background: `${statusMeta.color}15`, color: statusMeta.color 
+                            background: `${statusMeta.color}15`, color: statusMeta.color,
+                            whiteSpace: 'nowrap'
                           }}>
                             {statusMeta.label}
                           </span>

@@ -60,6 +60,7 @@ export default function LeadDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState<'timeline' | 'details' | 'activities'>('timeline')
+  const [team, setTeam] = useState<{ id: string; firstName: string; lastName: string; role: string }[]>([])
   
   // Activity Logging State
   const [showLogModal, setShowLogModal] = useState(false)
@@ -80,7 +81,36 @@ export default function LeadDetailPage() {
     }
   }, [id])
 
-  useEffect(() => { fetchLead() }, [fetchLead])
+  const fetchTeam = useCallback(async () => {
+    try {
+      const res = await fetch('/api/team')
+      if (res.ok) {
+        const data = await res.json()
+        setTeam(data.users || [])
+      }
+    } catch (err) {
+      console.error('Failed to fetch team members:', err)
+    }
+  }, [])
+
+  const handleAssign = async (userId: string) => {
+    try {
+      const res = await fetch(`/api/leads/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignedToId: userId || null })
+      })
+      if (!res.ok) throw new Error('Failed to assign lead')
+      fetchLead()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error assigning lead')
+    }
+  }
+
+  useEffect(() => {
+    fetchLead()
+    fetchTeam()
+  }, [fetchLead, fetchTeam])
 
   const handleLogActivity = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -278,18 +308,36 @@ export default function LeadDetailPage() {
               <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Expected Deal Value</p>
            </div>
 
-           <div className="card" style={{ padding: '20px' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: 800, marginBottom: '16px' }}>Ownership</h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'linear-gradient(135deg, #6366F1, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700 }}>
-                  {lead.assignedTo?.firstName[0] || 'U'}
-                </div>
-                <div>
-                   <div style={{ fontSize: '14px', fontWeight: 700 }}>{lead.assignedTo ? `${lead.assignedTo.firstName} ${lead.assignedTo.lastName}` : 'Unassigned'}</div>
-                   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Assigned Sales Rep</div>
-                </div>
-              </div>
-           </div>
+            <div className="card" style={{ padding: '20px' }}>
+               <h3 style={{ fontSize: '14px', fontWeight: 800, marginBottom: '16px' }}>Ownership</h3>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                   <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'linear-gradient(135deg, #6366F1, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700 }}>
+                     {lead.assignedTo?.firstName[0] || 'U'}
+                   </div>
+                   <div>
+                      <div style={{ fontSize: '14px', fontWeight: 700 }}>{lead.assignedTo ? `${lead.assignedTo.firstName} ${lead.assignedTo.lastName}` : 'Unassigned'}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Assigned Sales Rep</div>
+                   </div>
+                 </div>
+                 <div style={{ marginTop: '4px' }}>
+                    <label style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '6px' }}>Assign to Employee</label>
+                    <select
+                      value={lead.assignedTo?.id || ''}
+                      onChange={(e) => handleAssign(e.target.value)}
+                      className="input"
+                      style={{ fontSize: '13px', padding: '8px', background: 'var(--surface-bg)', color: 'var(--text-primary)' }}
+                    >
+                      <option value="">Unassigned</option>
+                      {team.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.firstName} {user.lastName} ({user.role})
+                        </option>
+                      ))}
+                    </select>
+                 </div>
+               </div>
+            </div>
 
            <div className="card" style={{ padding: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '12px' }}>

@@ -133,7 +133,19 @@ export function DynamicFieldRenderer({ entityId, entityType, onSave }: DynamicFi
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px' }}>
         {definitions.map((def) => {
           const val = values[def.id] || ''
-          const options = def.options ? JSON.parse(def.options) : []
+          const rawOptions = def.options as any
+          let options: string[] = []
+          if (rawOptions) {
+            if (typeof rawOptions === 'string') {
+              try {
+                options = JSON.parse(rawOptions)
+              } catch (e) {
+                options = []
+              }
+            } else if (Array.isArray(rawOptions)) {
+              options = rawOptions
+            }
+          }
 
           return (
             <div key={def.id} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>

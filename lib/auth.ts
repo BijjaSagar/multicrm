@@ -174,7 +174,7 @@ export const authConfig: NextAuthConfig = {
     },
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id
         token.email = user.email!
@@ -187,30 +187,36 @@ export const authConfig: NextAuthConfig = {
         token.tenantName = user.tenantName
         token.tenantSlug = user.tenantSlug
         token.tenantSettings = user.tenantSettings
+      }
 
-        // Fetch enabled modules and settings for the tenant - LAZY
-        try {
-          const prisma = (await import('@/lib/prisma')).default
-          const modules = await (prisma as any).tenantModule.findMany({
-            where: { 
-              tenantId: user.tenantId,
-              isEnabled: true 
-            },
-            select: { moduleKey: true }
-          })
-          token.enabledModules = modules.map((m: { moduleKey: string }) => m.moduleKey)
+      // Fetch enabled modules and settings for the tenant on initial login OR when session is updated
+      if (user || trigger === 'update') {
+        const tenantId = user?.tenantId || (token.tenantId as string)
+        if (tenantId) {
+          try {
+            const prisma = (await import('@/lib/prisma')).default
+            const modules = await (prisma as any).tenantModule.findMany({
+              where: { 
+                tenantId,
+                isEnabled: true 
+              },
+              select: { moduleKey: true }
+            })
+            token.enabledModules = modules.map((m: { moduleKey: string }) => m.moduleKey)
 
-          // Fetch fresh settings
-          const tenant = await prisma.tenant.findUnique({
-            where: { id: user.tenantId },
-            select: { settings: true }
-          })
-          token.tenantSettings = tenant?.settings || null
-        } catch (error) {
-          console.error('Error fetching tenant modules:', error)
-          token.enabledModules = []
+            // Fetch fresh settings
+            const tenant = await prisma.tenant.findUnique({
+              where: { id: tenantId },
+              select: { settings: true }
+            })
+            token.tenantSettings = tenant?.settings || null
+          } catch (error) {
+            console.error('Error fetching tenant modules:', error)
+            if (!token.enabledModules) token.enabledModules = []
+          }
         }
       }
+
       return token
     },
     async session({ session, token }) {

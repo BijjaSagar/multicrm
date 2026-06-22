@@ -16,6 +16,7 @@ declare module 'next-auth' {
       tenantName: string
       tenantSlug: string
       enabledModules: string[]
+      tenantSettings?: any
     }
   }
 
@@ -31,6 +32,7 @@ declare module 'next-auth' {
     tenantName: string
     tenantSlug: string
     enabledModules: string[]
+    tenantSettings?: any
   }
 
   interface JWT {
@@ -45,6 +47,7 @@ declare module 'next-auth' {
     tenantName: string
     tenantSlug: string
     enabledModules: string[]
+    tenantSettings?: any
   }
 }
 
@@ -77,6 +80,7 @@ export const authConfig: NextAuthConfig = {
                 name: true,
                 slug: true,
                 status: true,
+                settings: true,
               },
             },
           },
@@ -116,6 +120,7 @@ export const authConfig: NextAuthConfig = {
           avatar: user.avatar,
           tenantName: user.tenant.name,
           tenantSlug: user.tenant.slug,
+          tenantSettings: user.tenant.settings,
           enabledModules: [], 
         }
       },
@@ -172,8 +177,9 @@ export const authConfig: NextAuthConfig = {
         token.avatar = user.avatar
         token.tenantName = user.tenantName
         token.tenantSlug = user.tenantSlug
+        token.tenantSettings = user.tenantSettings
 
-        // Fetch enabled modules for the tenant - LAZY
+        // Fetch enabled modules and settings for the tenant - LAZY
         try {
           const prisma = (await import('@/lib/prisma')).default
           const modules = await (prisma as any).tenantModule.findMany({
@@ -184,6 +190,13 @@ export const authConfig: NextAuthConfig = {
             select: { moduleKey: true }
           })
           token.enabledModules = modules.map((m: { moduleKey: string }) => m.moduleKey)
+
+          // Fetch fresh settings
+          const tenant = await prisma.tenant.findUnique({
+            where: { id: user.tenantId },
+            select: { settings: true }
+          })
+          token.tenantSettings = tenant?.settings || null
         } catch (error) {
           console.error('Error fetching tenant modules:', error)
           token.enabledModules = []
@@ -205,6 +218,7 @@ export const authConfig: NextAuthConfig = {
         tenantName: token.tenantName as string,
         tenantSlug: token.tenantSlug as string,
         enabledModules: (token.enabledModules as string[]) || [],
+        tenantSettings: token.tenantSettings as any,
       }
       return session
     },
@@ -213,15 +227,14 @@ export const authConfig: NextAuthConfig = {
       const isOnDashboard = nextUrl.pathname.startsWith('/dashboard')
       const isOnAuth = nextUrl.pathname.startsWith('/auth')
 
-      if (isOnDashboard) {
-        if (isLoggedIn) return true
+      if (isOnDashboard && !isLoggedIn) {
         return false
       }
-      
+
       if (isOnAuth && isLoggedIn) {
         return Response.redirect(new URL('/dashboard', nextUrl))
       }
-      
+
       return true
     },
   },
@@ -229,12 +242,6 @@ export const authConfig: NextAuthConfig = {
     signIn: '/auth/login',
     error: '/auth/error',
   },
-  session: {
-    strategy: 'jwt',
-    maxAge: 24 * 60 * 60, // 24 hours
-  },
-  secret: process.env.NEXTAUTH_SECRET,
-  trustHost: true,
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth(authConfig)
+export const { auth, signIn, signOut, handlers } = NextAuth(authConfig)

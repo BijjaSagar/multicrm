@@ -115,6 +115,27 @@ export async function PATCH(req: NextRequest) {
       return success(updated)
     }
 
+    // Onboarding section
+    if (body.section === 'onboarding') {
+      const user = await prisma.user.findUnique({ where: { id: session.user.id } })
+      if (!user || user.role !== 'TENANT_ADMIN') return unauthorized()
+
+      const currentTenant = await prisma.tenant.findUnique({ where: { id: session.user.tenantId } })
+      const currentSettings = (currentTenant?.settings as any) || {}
+
+      const updated = await prisma.tenant.update({
+        where: { id: session.user.tenantId },
+        data: {
+          settings: {
+            ...currentSettings,
+            onboardingCompleted: true,
+            subVertical: body.subVertical,
+          }
+        }
+      })
+      return success(updated)
+    }
+
     return success({ message: 'No section specified' })
   } catch (error) {
     return serverError(error)

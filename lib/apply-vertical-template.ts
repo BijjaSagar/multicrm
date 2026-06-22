@@ -13,6 +13,17 @@ export async function applyVerticalTemplate(
   const template = VERTICAL_TEMPLATES[verticalKey]
   if (!template) return
 
+  // 0. Store vertical metadata in tenant settings
+  await tx.tenant.update({
+    where: { id: tenantId },
+    data: {
+      settings: {
+        verticalKey,
+        verticalName: template.name,
+      }
+    }
+  })
+
   // 1. Enable modules
   if (template.modules.length > 0) {
     await tx.tenantModule.createMany({

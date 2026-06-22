@@ -115,6 +115,17 @@ export default function DashboardLayout({
     }
   }, [status, router])
 
+  // Redirect to setup page if onboarding is not completed (tenant admin only)
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role === 'TENANT_ADMIN') {
+      const settings = session?.user?.tenantSettings
+      const onboardingCompleted = settings?.onboardingCompleted === true
+      if (!onboardingCompleted && pathname !== '/dashboard/setup') {
+        router.push('/dashboard/setup')
+      }
+    }
+  }, [status, session, pathname, router])
+
   useEffect(() => {
     const saved = localStorage.getItem('theme')
     if (saved === 'dark') {
@@ -162,6 +173,20 @@ export default function DashboardLayout({
 
   const user = session.user
   const initials = `${user.firstName?.charAt(0) || ''}${user.lastName?.charAt(0) || ''}`.toUpperCase()
+
+  const isSetupPage = pathname === '/dashboard/setup'
+
+  if (isSetupPage) {
+    return (
+      <ThemeContext.Provider value={{ isDark, toggleTheme }}>
+        <div style={{ minHeight: '100vh', background: 'var(--surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+          <div style={{ maxWidth: '640px', width: '100%' }}>
+            {children}
+          </div>
+        </div>
+      </ThemeContext.Provider>
+    )
+  }
 
   return (
     <ThemeContext.Provider value={{ isDark, toggleTheme }}>

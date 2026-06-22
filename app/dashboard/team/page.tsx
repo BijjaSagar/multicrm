@@ -52,8 +52,9 @@ export default function TeamPage() {
   const [inviteSuccess, setInviteSuccess] = useState<{ email: string; tempPassword: string } | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [branches, setBranches] = useState<{ id: string; name: string }[]>([])
   const [inviteForm, setInviteForm] = useState({
-    firstName: '', lastName: '', email: '', phone: '', role: 'SALES_REP'
+    firstName: '', lastName: '', email: '', phone: '', role: 'SALES_REP', password: '', branchId: ''
   })
 
   const fetchTeam = useCallback(async () => {
@@ -71,11 +72,19 @@ export default function TeamPage() {
     }
   }, [search])
 
-  useEffect(() => { fetchTeam() }, [fetchTeam])
+  useEffect(() => {
+    fetchTeam()
+    fetch('/api/branches')
+      .then(res => res.json())
+      .then(data => {
+        if (data.branches) setBranches(data.branches)
+      })
+      .catch(err => console.error('Failed to load branches:', err))
+  }, [fetchTeam])
 
   const handleInvite = async () => {
-    if (!inviteForm.firstName || !inviteForm.lastName || !inviteForm.email) {
-      setError('First name, last name, and email are required')
+    if (!inviteForm.firstName || !inviteForm.lastName || !inviteForm.email || !inviteForm.password) {
+      setError('First name, last name, email, and password are required')
       return
     }
     setInviting(true)
@@ -87,12 +96,12 @@ export default function TeamPage() {
         body: JSON.stringify(inviteForm),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Invite failed')
+      if (!res.ok) throw new Error(data.error || 'Failed to create member')
       setInviteSuccess({ email: inviteForm.email, tempPassword: data.tempPassword })
-      setInviteForm({ firstName: '', lastName: '', email: '', phone: '', role: 'SALES_REP' })
+      setInviteForm({ firstName: '', lastName: '', email: '', phone: '', role: 'SALES_REP', password: '', branchId: '' })
       fetchTeam()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Invite failed')
+      setError(err instanceof Error ? err.message : 'Failed to create member')
     } finally {
       setInviting(false)
     }
@@ -119,7 +128,7 @@ export default function TeamPage() {
         <div style={{ display: 'flex', gap: '10px' }}>
           <button className="btn btn-secondary btn-sm" onClick={fetchTeam} title="Refresh list"><RefreshCw size={14} /></button>
           <button className="btn btn-primary btn-sm" onClick={() => { setShowInvite(true); setInviteSuccess(null); setError('') }} style={{ gap: '8px' }}>
-            <Plus size={16} /> Invite Member
+            <Plus size={16} /> Create Member
           </button>
         </div>
       </div>
@@ -135,7 +144,7 @@ export default function TeamPage() {
                 <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(16,185,129,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                   <Check size={28} color="#10B981" />
                 </div>
-                <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>Member Invited!</h2>
+                <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>Member Created!</h2>
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '24px' }}>Share these credentials with the new member</p>
                 
                 <div style={{ background: 'var(--surface-raised)', borderRadius: '10px', padding: '16px', textAlign: 'left', marginBottom: '20px', border: '1px solid var(--surface-border)' }}>
@@ -147,7 +156,7 @@ export default function TeamPage() {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, marginBottom: '2px' }}>Temp Password</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, marginBottom: '2px' }}>Password</div>
                       <div style={{ fontSize: '14px', fontWeight: 600, fontFamily: 'monospace' }}>
                         {showPassword ? inviteSuccess.tempPassword : '••••••••••'}
                       </div>
@@ -167,7 +176,7 @@ export default function TeamPage() {
               </div>
             ) : (
               <>
-                <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '20px' }}>Invite New Member</h2>
+                <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '20px' }}>Create New Member</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     <div>
@@ -179,9 +188,15 @@ export default function TeamPage() {
                       <input type="text" className="input" placeholder="Doe" value={inviteForm.lastName} onChange={e => setInviteForm({ ...inviteForm, lastName: e.target.value })} />
                     </div>
                   </div>
-                  <div>
-                    <label style={{ fontSize: '12px', fontWeight: 700, marginBottom: '6px', display: 'block' }}>Email Address *</label>
-                    <input type="email" className="input" placeholder="john@company.com" value={inviteForm.email} onChange={e => setInviteForm({ ...inviteForm, email: e.target.value })} />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ fontSize: '12px', fontWeight: 700, marginBottom: '6px', display: 'block' }}>Email Address *</label>
+                      <input type="email" className="input" placeholder="john@company.com" value={inviteForm.email} onChange={e => setInviteForm({ ...inviteForm, email: e.target.value })} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '12px', fontWeight: 700, marginBottom: '6px', display: 'block' }}>Password *</label>
+                      <input type="password" className="input" placeholder="••••••••" value={inviteForm.password} onChange={e => setInviteForm({ ...inviteForm, password: e.target.value })} />
+                    </div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     <div>
@@ -195,10 +210,19 @@ export default function TeamPage() {
                       </select>
                     </div>
                   </div>
+                  {branches.length > 0 && (
+                    <div>
+                      <label style={{ fontSize: '12px', fontWeight: 700, marginBottom: '6px', display: 'block' }}>Branch</label>
+                      <select className="input" value={inviteForm.branchId} onChange={e => setInviteForm({ ...inviteForm, branchId: e.target.value })}>
+                        <option value="">No Branch Assigned</option>
+                        {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                      </select>
+                    </div>
+                  )}
                   <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
                     <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setShowInvite(false)}>Cancel</button>
                     <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleInvite} disabled={inviting}>
-                      {inviting ? <><Loader2 size={14} className="spinner" /> Inviting...</> : <><Plus size={14} /> Send Invite</>}
+                      {inviting ? <><Loader2 size={14} className="spinner" /> Creating...</> : <><Plus size={14} /> Create Member</>}
                     </button>
                   </div>
                 </div>

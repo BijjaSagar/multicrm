@@ -19,10 +19,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { firstName, lastName, email, phone, role: memberRole, branchId } = body
+    const { firstName, lastName, email, phone, role: memberRole, branchId, password } = body
 
-    if (!firstName || !lastName || !email) {
-      return badRequest('First name, last name, and email are required')
+    if (!firstName || !lastName || !email || !password) {
+      return badRequest('First name, last name, email, and password are required')
     }
 
     // Check if email already exists in tenant
@@ -33,9 +33,7 @@ export async function POST(request: NextRequest) {
       return badRequest('A user with this email already exists in your organization')
     }
 
-    // Generate a temporary password (user should change on first login)
-    const tempPassword = `Welcome@${Math.random().toString(36).slice(-6)}`
-    const hashedPassword = await bcrypt.hash(tempPassword, 12)
+    const hashedPassword = await bcrypt.hash(password, 12)
 
     const newUser = await prisma.user.create({
       data: {
@@ -67,7 +65,7 @@ export async function POST(request: NextRequest) {
       changes: { firstName, lastName, email, role: memberRole },
     })
 
-    return success({ user: newUser, tempPassword }, 201)
+    return success({ user: newUser, tempPassword: password }, 201)
   } catch (error) {
     console.error('TEAM_INVITE_ERROR:', error)
     return serverError(error)

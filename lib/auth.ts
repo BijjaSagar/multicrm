@@ -1,3 +1,10 @@
+if (!process.env.AUTH_SECRET) {
+  process.env.AUTH_SECRET = process.env.NEXTAUTH_SECRET || 'd5beb04276614e1b26979f26b7b2c5a4810f723e30fa9cb9dab9196733a94c6c';
+}
+if (!process.env.NEXTAUTH_SECRET) {
+  process.env.NEXTAUTH_SECRET = process.env.AUTH_SECRET;
+}
+
 import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import type { NextAuthConfig } from 'next-auth'
@@ -53,6 +60,7 @@ declare module 'next-auth' {
 }
 
 export const authConfig: NextAuthConfig = {
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || 'd5beb04276614e1b26979f26b7b2c5a4810f723e30fa9cb9dab9196733a94c6c',
   providers: [
     CredentialsProvider({
       name: 'credentials',

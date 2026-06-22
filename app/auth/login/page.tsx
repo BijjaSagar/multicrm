@@ -50,8 +50,7 @@ function LoginForm() {
       if (result?.error) {
         setError(result.error)
       } else {
-        router.push('/dashboard')
-        router.refresh()
+        window.location.href = '/dashboard'
       }
     } catch {
       setError('An unexpected error occurred')

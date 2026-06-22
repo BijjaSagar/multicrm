@@ -9,7 +9,6 @@ const MODULE_ROUTES: Record<string, string> = {
   '/dashboard/inbox': 'COMMUNICATION_HUB',
   '/dashboard/campaigns': 'CAMPAIGN_MANAGER',
   '/dashboard/knowledge-base': 'KNOWLEDGE_BASE',
-  '/dashboard/attendance': 'HR_RECRUITMENT',
 }
 
 export default auth((req) => {

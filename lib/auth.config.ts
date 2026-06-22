@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server"
 import type { NextAuthConfig } from "next-auth"
 
 export const authConfig = {
@@ -14,7 +15,7 @@ export const authConfig = {
       }
       
       if (isOnAuth && isLoggedIn) {
-        return Response.redirect(new URL('/dashboard', nextUrl))
+        return NextResponse.redirect(new URL('/dashboard', nextUrl))
       }
       
       return true

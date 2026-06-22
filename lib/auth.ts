@@ -1,6 +1,7 @@
 import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import type { NextAuthConfig } from 'next-auth'
+import { NextResponse } from 'next/server'
 
 declare module 'next-auth' {
   interface Session {
@@ -232,7 +233,7 @@ export const authConfig: NextAuthConfig = {
       }
 
       if (isOnAuth && isLoggedIn) {
-        return Response.redirect(new URL('/dashboard', nextUrl))
+        return NextResponse.redirect(new URL('/dashboard', nextUrl))
       }
 
       return true

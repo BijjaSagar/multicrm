@@ -19,11 +19,11 @@ export default auth((req) => {
   const isOnAuth = pathname.startsWith('/auth')
 
   if (isOnDashboard && !isLoggedIn) {
-    return Response.redirect(new URL('/auth/login', req.nextUrl))
+    return NextResponse.redirect(new URL('/auth/login', req.nextUrl))
   }
 
   if (isOnAuth && isLoggedIn) {
-    return Response.redirect(new URL('/dashboard', req.nextUrl))
+    return NextResponse.redirect(new URL('/dashboard', req.nextUrl))
   }
 
   // Vertical Module Guard
@@ -35,7 +35,7 @@ export default auth((req) => {
     if (requiredModule) {
       const enabledModules = (req.auth?.user as any)?.enabledModules || []
       if (!enabledModules.includes(requiredModule)) {
-        return Response.redirect(new URL('/dashboard?error=module_required', req.nextUrl))
+        return NextResponse.redirect(new URL('/dashboard?error=module_required', req.nextUrl))
       }
     }
   }

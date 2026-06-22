@@ -179,6 +179,16 @@ export default function RegisterPage() {
                   <option value="EDUCATION">Education (Courses/Schools)</option>
                   <option value="DISTANCE_EDUCATION">Distance Education (LSC Admissions)</option>
                   <option value="ECOMMERCE">eCommerce (Stores/Supplies)</option>
+                  <option value="HOSPITALITY">Hospitality & Hotels</option>
+                  <option value="FINANCE_INSURANCE">Finance & Insurance</option>
+                  <option value="AUTOMOTIVE">Automotive Dealership</option>
+                  <option value="LEGAL">Legal & Law Firms</option>
+                  <option value="FITNESS_WELLNESS">Fitness & Wellness</option>
+                  <option value="EVENTS">Events & Wedding Planning</option>
+                  <option value="RESTAURANT">Restaurants & Catering</option>
+                  <option value="LOGISTICS">Logistics & Transport</option>
+                  <option value="COWORKING">Coworking & Commercial Rental</option>
+                  <option value="IT_SERVICES">IT Services & Agencies</option>
                 </select>
               </div>
             </div>

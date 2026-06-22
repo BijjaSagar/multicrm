@@ -25,16 +25,13 @@ export default auth((req) => {
   const isOnDashboard = pathname.startsWith('/dashboard')
   const isOnAuth = pathname.startsWith('/auth')
 
+  let response: NextResponse
+
   if (isOnDashboard && !isLoggedIn) {
-    return NextResponse.redirect(new URL('/auth/login', req.nextUrl))
-  }
-
-  if (isOnAuth && isLoggedIn) {
-    return NextResponse.redirect(new URL('/dashboard', req.nextUrl))
-  }
-
-  // Vertical Module Guard
-  if (isLoggedIn && isOnDashboard) {
+    response = NextResponse.redirect(new URL('/auth/login', req.nextUrl))
+  } else if (isOnAuth && isLoggedIn) {
+    response = NextResponse.redirect(new URL('/dashboard', req.nextUrl))
+  } else if (isLoggedIn && isOnDashboard) {
     const requiredModule = Object.entries(MODULE_ROUTES).find(([route]) => 
       pathname.startsWith(route)
     )?.[1]
@@ -42,12 +39,24 @@ export default auth((req) => {
     if (requiredModule) {
       const enabledModules = (req.auth?.user as any)?.enabledModules || []
       if (!enabledModules.includes(requiredModule)) {
-        return NextResponse.redirect(new URL('/dashboard?error=module_required', req.nextUrl))
+        response = NextResponse.redirect(new URL('/dashboard?error=module_required', req.nextUrl))
+      } else {
+        response = NextResponse.next()
       }
+    } else {
+      response = NextResponse.next()
     }
+  } else {
+    response = NextResponse.next()
   }
 
-  return NextResponse.next()
+  // Force disable caching for all requests handled by middleware (dashboard, auth pages)
+  // This prevents LiteSpeed Cache (Hostinger) from caching RSC JSON payloads and serving them for HTML pages.
+  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+  response.headers.set('Pragma', 'no-cache')
+  response.headers.set('Expires', '0')
+
+  return response
 })
 
 export const config = {

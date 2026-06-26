@@ -75,6 +75,43 @@ export default function ContactsPage() {
     }
   }, [page, searchQuery, typeFilter])
 
+  const handleExportCSV = async () => {
+    try {
+      const params = new URLSearchParams({ page: '1', limit: '5000', search: searchQuery })
+      if (typeFilter !== 'all') params.set('status', typeFilter)
+      const res = await fetch(`/api/contacts?${params}`)
+      if (!res.ok) throw new Error('Failed to fetch contacts for export')
+      const data = await res.json()
+      const rows: Contact[] = data.contacts
+
+      const headers = ['First Name','Last Name','Email','Phone','Mobile','Company','Job Title','Type','Status','City','State','Country','Branch','Deals','Tickets','Created Date']
+      const csvRows = [
+        headers.join(','),
+        ...rows.map(c => [
+          c.firstName, c.lastName,
+          c.email || '', c.phone || '', c.mobile || '',
+          c.company || '', c.jobTitle || '',
+          c.type, c.status,
+          c.city || '', c.state || '', c.country || '',
+          c.branch?.name || '',
+          c._count.deals, c._count.tickets,
+          new Date(c.createdAt).toLocaleDateString('en-IN'),
+        ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')),
+      ]
+
+      const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `contacts_${new Date().toISOString().slice(0, 10)}.csv`
+      link.click()
+      URL.revokeObjectURL(url)
+      toast.success(`Exported ${rows.length} contacts`)
+    } catch (err) {
+      toast.error('Export failed')
+    }
+  }
+
   useEffect(() => {
     fetchContacts()
     // Handle ?edit=id from deep links
@@ -185,6 +222,7 @@ export default function ContactsPage() {
             </button>
           </div>
           <button className="btn btn-secondary btn-sm" onClick={fetchContacts}><RefreshCw size={14} /></button>
+          <button className="btn btn-secondary btn-sm" onClick={handleExportCSV} title="Export to CSV"><Download size={14} /> Export CSV</button>
           <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}><Plus size={16} /> Add Contact</button>
         </div>
       </div>

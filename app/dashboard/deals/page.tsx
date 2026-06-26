@@ -4,9 +4,10 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   DollarSign, Plus, Eye, Edit, Building2, Calendar,
   LayoutGrid, List, X, TrendingUp, Loader2, RefreshCw,
-  AlertCircle, Trash2, FileDown, User,
+  AlertCircle, Trash2, FileDown, User, Download,
 } from 'lucide-react'
 import { useConfirm } from '@/components/confirm-modal'
+import { useToast } from '@/components/toast'
 import Link from 'next/link'
 import { generateQuotationPDF } from '@/lib/pdf-gen'
 
@@ -37,6 +38,7 @@ import { useSession } from 'next-auth/react'
 export default function DealsPage() {
   const { data: session } = useSession()
   const { confirm } = useConfirm()
+  const toast = useToast()
   const [deals, setDeals] = useState<Deal[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -139,6 +141,34 @@ export default function DealsPage() {
     fetchDeals()
   }
 
+  const handleExportCSV = () => {
+    const headers = ['Title','Value (INR)','Status','Stage','Probability %','Priority','Contact','Assigned To','Branch','Expected Close Date','Created Date']
+    const csvRows = [
+      headers.join(','),
+      ...deals.map(d => [
+        d.title,
+        d.value,
+        d.status,
+        d.stage?.name || '',
+        d.probability,
+        d.priority,
+        d.contact ? `${d.contact.firstName} ${d.contact.lastName}` : '',
+        d.assignedTo ? `${d.assignedTo.firstName} ${d.assignedTo.lastName}` : '',
+        d.branch?.name || '',
+        d.expectedCloseDate ? new Date(d.expectedCloseDate).toLocaleDateString('en-IN') : '',
+        new Date(d.createdAt).toLocaleDateString('en-IN'),
+      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')),
+    ]
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `deals_${new Date().toISOString().slice(0, 10)}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+    toast.success(`Exported ${deals.length} deals`)
+  }
+
   const openDeals = deals.filter(d => d.status === 'OPEN')
   const totalPipeline = openDeals.reduce((sum, d) => sum + Number(d.value), 0)
   const winRate = summary.totalDeals > 0 ? Math.round((summary.wonDeals / summary.totalDeals) * 100) : 0
@@ -176,6 +206,7 @@ export default function DealsPage() {
             <button className={`btn btn-sm ${viewMode === 'list' ? 'btn-primary' : 'btn-ghost'}`} style={{ borderRadius: 0 }} onClick={() => setViewMode('list')}><List size={14} /> List</button>
           </div>
           <button className="btn btn-secondary btn-sm" onClick={fetchDeals}><RefreshCw size={14} /></button>
+          <button className="btn btn-secondary btn-sm" onClick={handleExportCSV} title="Export to CSV" disabled={deals.length === 0}><Download size={14} /> Export CSV</button>
           {session?.user?.role !== 'VIEWER' && (
             <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}><Plus size={16} /> Add Deal</button>
           )}

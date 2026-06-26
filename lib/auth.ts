@@ -193,26 +193,33 @@ export const authConfig: NextAuthConfig = {
       if (user || trigger === 'update') {
         const tenantId = user?.tenantId || (token.tenantId as string)
         if (tenantId) {
+          const prisma = (await import('@/lib/prisma')).default
+
+          // Fetch modules independently — failure here must not block settings refresh
           try {
-            const prisma = (await import('@/lib/prisma')).default
             const modules = await (prisma as any).tenantModule.findMany({
-              where: { 
+              where: {
                 tenantId,
-                isEnabled: true 
+                isEnabled: true
               },
               select: { moduleKey: true }
             })
             token.enabledModules = modules.map((m: { moduleKey: string }) => m.moduleKey)
+          } catch (error) {
+            console.error('Error fetching tenant modules:', error)
+            if (!token.enabledModules) token.enabledModules = []
+          }
 
-            // Fetch fresh settings
+          // Always fetch fresh tenant settings — kept separate so a module fetch failure
+          // never prevents onboardingCompleted (or other setting changes) from being reflected.
+          try {
             const tenant = await prisma.tenant.findUnique({
               where: { id: tenantId },
               select: { settings: true }
             })
             token.tenantSettings = tenant?.settings || null
           } catch (error) {
-            console.error('Error fetching tenant modules:', error)
-            if (!token.enabledModules) token.enabledModules = []
+            console.error('Error fetching tenant settings:', error)
           }
         }
       }

@@ -4,8 +4,10 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   Mail, Plus, Search, Edit, Trash2, X,
   Loader2, RefreshCw, AlertCircle, CheckCircle2, XCircle,
-  Copy, Eye, FileText,
+  Copy, Eye, FileText, Sparkles, Wand2,
 } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { getVerticalConfig } from '@/lib/vertical-config'
 
 interface Template {
   id: string
@@ -19,12 +21,62 @@ interface Template {
 }
 
 export default function TemplatesPage() {
+  const { data: session } = useSession()
   const [templates, setTemplates] = useState<Template[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null)
   const [creating, setCreating] = useState(false)
+  // AI generation state
+  const [aiPrompt, setAiPrompt] = useState('')
+  const [aiBodyRef, setAiBodyRef] = useState<HTMLTextAreaElement | null>(null)
+  const [aiSubjectRef, setAiSubjectRef] = useState<HTMLInputElement | null>(null)
+  const [generatingBody, setGeneratingBody] = useState(false)
+  const [generatingSubject, setGeneratingSubject] = useState(false)
+  const [aiError, setAiError] = useState('')
+
+  const vertical = getVerticalConfig(session?.user?.tenantSettings?.verticalKey)
+
+  const generateBody = async () => {
+    if (!aiPrompt.trim() || !aiBodyRef) return
+    setGeneratingBody(true)
+    setAiError('')
+    try {
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'email-generate', prompt: aiPrompt, vertical: vertical.entityName }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      aiBodyRef.value = data.result
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : 'AI generation failed')
+    } finally {
+      setGeneratingBody(false)
+    }
+  }
+
+  const generateSubject = async () => {
+    if (!aiBodyRef?.value || !aiSubjectRef) return
+    setGeneratingSubject(true)
+    setAiError('')
+    try {
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'subject-generate', body: aiBodyRef.value, vertical: vertical.entityName }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      aiSubjectRef.value = data.result
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : 'Subject generation failed')
+    } finally {
+      setGeneratingSubject(false)
+    }
+  }
 
   const fetchTemplates = useCallback(async () => {
     setLoading(true)
@@ -174,12 +226,43 @@ export default function TemplatesPage() {
 
       {/* Create Modal */}
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }} onClick={() => setShowModal(false)}>
-          <div className="card animate-scale-in" style={{ width: '640px', padding: '28px' }} onClick={e => e.stopPropagation()}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }} onClick={() => { setShowModal(false); setAiError('') }}>
+          <div className="card animate-scale-in" style={{ width: '680px', maxHeight: '90vh', overflowY: 'auto', padding: '28px' }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
               <h2 style={{ fontSize: '20px', fontWeight: 700 }}>Create Email Template</h2>
-              <button className="btn btn-ghost btn-icon" onClick={() => setShowModal(false)}><X size={18} /></button>
+              <button className="btn btn-ghost btn-icon" onClick={() => { setShowModal(false); setAiError('') }}><X size={18} /></button>
             </div>
+
+            {/* AI Generator Panel */}
+            <div style={{ padding: '16px', borderRadius: '12px', background: 'linear-gradient(135deg, rgba(99,102,241,0.05), rgba(139,92,246,0.05))', border: '1px solid rgba(99,102,241,0.15)', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                <Sparkles size={16} color="#6366F1" />
+                <span style={{ fontSize: '13px', fontWeight: 700, color: '#6366F1' }}>AI Template Generator</span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="text"
+                  className="input"
+                  placeholder={`e.g., "follow-up after a ${vertical.entityName.toLowerCase()} inquiry, friendly tone"`}
+                  value={aiPrompt}
+                  onChange={e => setAiPrompt(e.target.value)}
+                  style={{ flex: 1, fontSize: '13px' }}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); generateBody() } }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={generateBody}
+                  disabled={generatingBody || !aiPrompt.trim()}
+                  style={{ gap: '6px', whiteSpace: 'nowrap' }}
+                >
+                  {generatingBody ? <Loader2 size={14} className="spinner" /> : <Wand2 size={14} />}
+                  Generate Body
+                </button>
+              </div>
+              {aiError && <p style={{ fontSize: '12px', color: '#EF4444', marginTop: '8px' }}>{aiError}</p>}
+            </div>
+
             <form onSubmit={handleCreate}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -188,15 +271,23 @@ export default function TemplatesPage() {
                     <select name="category" className="input">{categories.map(c => <option key={c} value={c}>{c}</option>)}</select>
                   </div>
                 </div>
-                <div><label className="label">Subject Line *</label><input name="subject" className="input" placeholder="Hello {{firstName}}, welcome aboard!" required /></div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <label className="label" style={{ marginBottom: 0 }}>Subject Line *</label>
+                    <button type="button" className="btn btn-ghost btn-xs" onClick={generateSubject} disabled={generatingSubject} style={{ fontSize: '11px', gap: '4px', color: '#6366F1' }}>
+                      {generatingSubject ? <Loader2 size={10} className="spinner" /> : <Sparkles size={10} />} AI Subject
+                    </button>
+                  </div>
+                  <input name="subject" className="input" placeholder="Hello {{firstName}}, welcome aboard!" required ref={(el) => setAiSubjectRef(el)} />
+                </div>
                 <div>
                   <label className="label">Email Body *</label>
-                  <textarea name="body" className="input" rows={8} placeholder={'Hi {{firstName}},\n\nThank you for your interest in our services...\n\nBest regards,\n{{senderName}}'} required style={{ resize: 'vertical', fontFamily: 'inherit', lineHeight: '1.6' }} />
+                  <textarea name="body" className="input" rows={9} placeholder={'Hi {{firstName}},\n\nThank you for your interest in our services...\n\nBest regards,\n{{senderName}}'} required style={{ resize: 'vertical', fontFamily: 'inherit', lineHeight: '1.6' }} ref={(el) => setAiBodyRef(el)} />
                   <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>Use {'{{variable}}'} for dynamic content: {'{{firstName}}, {{company}}, {{dealTitle}}'}</p>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="button" className="btn btn-secondary" onClick={() => { setShowModal(false); setAiError('') }}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={creating}>
                   {creating ? <><Loader2 size={16} className="spinner" /> Creating...</> : <><Plus size={16} /> Create Template</>}
                 </button>

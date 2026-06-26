@@ -49,11 +49,14 @@ export async function PATCH(req: NextRequest) {
       if (!user || !['SUPER_ADMIN', 'TENANT_ADMIN'].includes(user.role)) {
         return unauthorized()
       }
+      const currentTenant = await prisma.tenant.findUnique({ where: { id: session.user.tenantId } })
+      const currentSettings = (currentTenant?.settings as any) || {}
       const updated = await prisma.tenant.update({
         where: { id: session.user.tenantId },
         data: {
           name: body.name,
           settings: {
+            ...currentSettings,
             industry: body.industry,
             currency: body.currency,
             timezone: body.timezone,

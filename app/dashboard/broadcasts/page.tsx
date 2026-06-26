@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { 
-  Send, MessageSquare, Mail, Users, Filter, 
+import { useToast } from '@/components/toast'
+import {
+  Send, MessageSquare, Mail, Users, Filter,
   Search, CheckCircle2, AlertCircle, Loader2,
   Clock, BarChart3, Plus, Trash2, Calendar,
   MoreHorizontal, Play, Pause, ChevronRight
@@ -30,6 +31,7 @@ const statusColors: Record<string, string> = {
 }
 
 export default function BroadcastsPage() {
+  const toast = useToast()
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -74,7 +76,7 @@ export default function BroadcastsPage() {
       setShowCreateModal(false)
       fetchBroadcasts()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error launching campaign')
+      toast.error(err instanceof Error ? err.message : 'Error launching campaign')
     } finally {
       setLoading(false)
     }

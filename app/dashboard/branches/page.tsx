@@ -6,6 +6,7 @@ import {
   Check, X, Loader2, RefreshCw, AlertCircle, Edit, Trash2,
   Globe, Star,
 } from 'lucide-react'
+import { useToast } from '@/components/toast'
 
 interface Branch {
   id: string
@@ -24,6 +25,7 @@ interface Branch {
 }
 
 export default function BranchesPage() {
+  const toast = useToast()
   const [branches, setBranches] = useState<Branch[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -104,7 +106,7 @@ export default function BranchesPage() {
       setShowEditModal(false)
       fetchBranches()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Update failed')
+      toast.error(err instanceof Error ? err.message : 'Update failed')
     } finally {
       setUpdating(false)
     }
@@ -117,7 +119,7 @@ export default function BranchesPage() {
       if (!res.ok) throw new Error('Delete failed')
       fetchBranches()
     } catch (err) {
-      alert('Error: Could not delete this branch. It may have associated users or data.')
+      toast.error('Could not delete this branch. It may have associated users or data.')
     }
   }
 

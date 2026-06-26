@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useToast } from '@/components/toast'
 import {
   Settings,
   Plus,
@@ -34,6 +35,7 @@ const FIELD_TYPES = [
 ]
 
 export default function CustomFieldsSettings() {
+  const toast = useToast()
   const [activeTab, setActiveTab] = useState('LEAD')
   const [fields, setFields] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -97,7 +99,7 @@ export default function CustomFieldsSettings() {
         setNewField({ fieldName: '', fieldType: 'TEXT', isRequired: false, options: [] })
         fetchFields()
       } else {
-        alert('Failed to save field')
+        toast.error('Failed to save custom field')
       }
     } catch (err) {
       console.error(err)

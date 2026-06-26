@@ -2,13 +2,16 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { 
-  User, Mail, Phone, Building2, MapPin, Calendar, 
+import {
+  User, Mail, Phone, Building2, MapPin, Calendar,
   Clock, Plus, MoreHorizontal, ArrowLeft, Loader2,
   PhoneCall, Video, CheckCircle2, MessageSquare, AlertCircle,
-  TrendingUp, Star, Filter, Search, Edit3, Trash2, Settings
+  TrendingUp, Star, Filter, Search, Edit3, Trash2, Settings,
+  Sparkles, Zap, RefreshCw,
 } from 'lucide-react'
 import { DynamicFieldRenderer } from '@/components/dynamic-field-renderer'
+import { useSession } from 'next-auth/react'
+import { getVerticalConfig } from '@/lib/vertical-config'
 
 interface Activity {
   id: string
@@ -54,6 +57,7 @@ const typeIcons: Record<string, any> = {
 }
 
 export default function LeadDetailPage() {
+  const { data: session } = useSession()
   const { id } = useParams()
   const router = useRouter()
   const [lead, setLead] = useState<Lead | null>(null)
@@ -61,11 +65,39 @@ export default function LeadDetailPage() {
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState<'timeline' | 'details' | 'activities'>('timeline')
   const [team, setTeam] = useState<{ id: string; firstName: string; lastName: string; role: string }[]>([])
-  
+
   // Activity Logging State
   const [showLogModal, setShowLogModal] = useState(false)
   const [logging, setLogging] = useState(false)
   const [converting, setConverting] = useState(false)
+
+  // AI Insights state
+  const [aiInsights, setAiInsights] = useState<{ summary: string; nextAction: string } | null>(null)
+  const [loadingAi, setLoadingAi] = useState(false)
+
+  const verticalConfig = getVerticalConfig(session?.user?.tenantSettings?.verticalKey)
+
+  const fetchAiInsights = async (currentLead: Lead) => {
+    setLoadingAi(true)
+    try {
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'lead-summary',
+          lead: currentLead,
+          vertical: verticalConfig.entityName,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setAiInsights(data.result)
+    } catch (err) {
+      setAiInsights({ summary: 'AI insights unavailable — check ANTHROPIC_API_KEY in server settings.', nextAction: '' })
+    } finally {
+      setLoadingAi(false)
+    }
+  }
 
   const fetchLead = useCallback(async () => {
     setLoading(true)
@@ -103,7 +135,7 @@ export default function LeadDetailPage() {
       if (!res.ok) throw new Error('Failed to assign lead')
       fetchLead()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error assigning lead')
+      console.error(err instanceof Error ? err.message : 'Error assigning lead')
     }
   }
 
@@ -150,10 +182,10 @@ export default function LeadDetailPage() {
       })
       if (!res.ok) throw new Error('Conversion failed')
       const data = await res.json()
-      alert('Lead successfully converted to a deal!')
+      // navigate immediately — toast would disappear before redirect
       router.push(`/dashboard/deals/${data.id}`)
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error converting lead')
+      console.error(err instanceof Error ? err.message : 'Error converting lead')
     } finally {
       setConverting(false)
     }
@@ -338,6 +370,45 @@ export default function LeadDetailPage() {
                  </div>
                </div>
             </div>
+
+           {/* AI Insights Card */}
+           <div className="card" style={{ padding: '20px', background: 'linear-gradient(135deg, rgba(99,102,241,0.03), rgba(139,92,246,0.03))', border: '1px solid rgba(99,102,241,0.12)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px', color: '#6366F1' }}>
+                  <Sparkles size={15} /> AI Insights
+                </h3>
+                <button
+                  className="btn btn-ghost btn-xs"
+                  onClick={() => lead && fetchAiInsights(lead)}
+                  disabled={loadingAi}
+                  style={{ fontSize: '11px', color: '#6366F1', gap: '4px' }}
+                >
+                  {loadingAi ? <Loader2 size={10} className="spinner" /> : <RefreshCw size={10} />}
+                  {aiInsights ? 'Refresh' : 'Analyse'}
+                </button>
+              </div>
+              {loadingAi ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '12px', padding: '8px 0' }}>
+                  <Loader2 size={14} className="spinner" /> Analysing lead with AI...
+                </div>
+              ) : aiInsights ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>{aiInsights.summary}</p>
+                  {aiInsights.nextAction && (
+                    <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)' }}>
+                      <div style={{ fontSize: '10px', fontWeight: 700, color: '#10B981', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Zap size={10} /> Recommended Next Action
+                      </div>
+                      <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', lineHeight: '1.5' }}>{aiInsights.nextAction}</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.6' }}>
+                  Click Analyse to get an AI-powered summary and next-action recommendation for this {verticalConfig.entityName.toLowerCase()}.
+                </p>
+              )}
+           </div>
 
            <div className="card" style={{ padding: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '12px' }}>

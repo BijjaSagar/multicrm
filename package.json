@@ -17,6 +17,7 @@
     "seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.106.0",
     "@auth/prisma-adapter": "^2.11.1",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/modifiers": "^9.0.0",
@@ -66,6 +67,5 @@
     "typescript": "^5",
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
-  },
-  "devDependencies": {}
+  }
 }

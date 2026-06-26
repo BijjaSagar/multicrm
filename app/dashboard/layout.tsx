@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, createContext, useContext } from 'react'
+import { useState, useEffect, useRef, createContext, useContext } from 'react'
 import { NotificationsPopover } from '@/components/notifications-popover'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter, usePathname } from 'next/navigation'
@@ -34,6 +34,9 @@ import {
   Zap,
   Clock,
 } from 'lucide-react'
+import { getVerticalConfig } from '@/lib/vertical-config'
+import { AiChatWidget } from '@/components/ai-chat-widget'
+import { ToastProvider } from '@/components/toast'
 
 // Theme Context
 const ThemeContext = createContext({
@@ -108,6 +111,37 @@ export default function DashboardLayout({
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setSearchOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val)
+    clearTimeout(searchTimer.current)
+    if (val.length < 2) { setSearchResults([]); setSearchOpen(false); return }
+    setSearchLoading(true)
+    setSearchOpen(true)
+    searchTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(val)}`)
+        const data = await res.json()
+        setSearchResults(data.results || [])
+      } catch { setSearchResults([]) }
+      finally { setSearchLoading(false) }
+    }, 280)
+  }
+
+  const TYPE_COLORS: Record<string, string> = { lead: '#6366F1', contact: '#10B981', deal: '#F59E0B', ticket: '#EF4444' }
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -173,6 +207,8 @@ export default function DashboardLayout({
 
   const user = session.user
   const initials = `${user.firstName?.charAt(0) || ''}${user.lastName?.charAt(0) || ''}`.toUpperCase()
+  const verticalConfig = getVerticalConfig(user.tenantSettings?.verticalKey)
+  const entityNamePlural = verticalConfig.entityNamePlural
 
   const isSetupPage = pathname === '/dashboard/setup'
 
@@ -189,6 +225,7 @@ export default function DashboardLayout({
   }
 
   return (
+    <ToastProvider>
     <ThemeContext.Provider value={{ isDark, toggleTheme }}>
       {/* Mobile Overlay */}
       {mobileOpen && (
@@ -264,16 +301,17 @@ export default function DashboardLayout({
                 .filter((item: any) => !item.roles || item.roles.includes(user.role))
                 .map((item: any) => {
                 const isActive = pathname === item.href
+                const displayName = item.href === '/dashboard/leads' ? entityNamePlural : item.name
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     className={`sidebar-link ${isActive ? 'active' : ''}`}
-                    title={collapsed ? item.name : undefined}
+                    title={collapsed ? displayName : undefined}
                     onClick={() => setMobileOpen(false)}
                   >
                     <item.icon size={20} />
-                    {!collapsed && <span>{item.name}</span>}
+                    {!collapsed && <span>{displayName}</span>}
                   </Link>
                 )
               })}
@@ -331,52 +369,50 @@ export default function DashboardLayout({
             </button>
             <style>{`@media (max-width: 1024px) { #mobile-menu-toggle { display: flex !important; } }`}</style>
 
-            <div
-              style={{
-                position: 'relative',
-                width: '320px',
-              }}
-            >
-              <Search
-                size={16}
-                style={{
-                  position: 'absolute',
-                  left: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: 'var(--text-muted)',
-                }}
-              />
+            <div ref={searchRef} style={{ position: 'relative', width: '320px' }}>
+              <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', zIndex: 1 }} />
               <input
                 type="text"
-                placeholder="Search leads, contacts, deals..."
+                placeholder={`Search ${entityNamePlural.toLowerCase()}, contacts, deals...`}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onFocus={() => { if (searchQuery.length >= 2) setSearchOpen(true) }}
                 className="input"
-                style={{
-                  paddingLeft: '36px',
-                  height: '38px',
-                  fontSize: '13px',
-                  background: 'var(--surface-raised)',
-                  border: '1px solid var(--surface-border)',
-                }}
+                style={{ paddingLeft: '36px', paddingRight: searchLoading ? '36px' : '12px', height: '38px', fontSize: '13px', background: 'var(--surface-raised)', border: '1px solid var(--surface-border)' }}
               />
-              <span
-                style={{
-                  position: 'absolute',
-                  right: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  fontSize: '11px',
-                  color: 'var(--text-muted)',
-                  background: 'var(--surface-bg)',
-                  padding: '2px 6px',
-                  borderRadius: '4px',
-                  border: '1px solid var(--surface-border)',
-                }}
-              >
-                ⌘K
-              </span>
+              {searchLoading && (
+                <div className="spinner" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', width: '14px', height: '14px', borderWidth: '2px' }} />
+              )}
+
+              {searchOpen && (
+                <div className="animate-fade-in-down" style={{ position: 'absolute', top: '44px', left: 0, width: '100%', background: 'var(--surface-bg)', border: '1px solid var(--surface-border)', borderRadius: '12px', boxShadow: 'var(--shadow-xl)', overflow: 'hidden', zIndex: 200 }}>
+                  {searchResults.length === 0 ? (
+                    <div style={{ padding: '24px', textAlign: 'center', fontSize: '13px', color: 'var(--text-muted)' }}>
+                      {searchLoading ? 'Searching…' : 'No results found'}
+                    </div>
+                  ) : (
+                    <div style={{ maxHeight: '340px', overflowY: 'auto' }}>
+                      {searchResults.map((r) => (
+                        <Link key={`${r.type}-${r.id}`} href={r.href} onClick={() => { setSearchOpen(false); setSearchQuery('') }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderBottom: '1px solid var(--surface-border)', cursor: 'pointer', transition: 'background 100ms' }}
+                            onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-raised)')}
+                            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 700, background: `${TYPE_COLORS[r.type]}18`, color: TYPE_COLORS[r.type], textTransform: 'capitalize', flexShrink: 0 }}>{r.type}</span>
+                              <div>
+                                <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{r.label}</div>
+                                {r.sub && <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{r.sub}</div>}
+                              </div>
+                            </div>
+                            {r.badge && <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>{r.badge}</span>}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -551,6 +587,10 @@ export default function DashboardLayout({
           {children}
         </main>
       </div>
+
+      {/* Floating AI Chat Widget */}
+      <AiChatWidget />
     </ThemeContext.Provider>
+    </ToastProvider>
   )
 }

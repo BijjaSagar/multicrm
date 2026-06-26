@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { 
+import { useToast } from '@/components/toast'
+import {
   Zap, Plus, Trash2, Play, Pause, AlertCircle,
   Clock, ArrowRight, ShieldCheck, Loader2, RefreshCw
 } from 'lucide-react'
@@ -25,6 +26,7 @@ interface Automation {
 }
 
 export default function AutomationPage() {
+  const toast = useToast()
   const [automations, setAutomations] = useState<Automation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -59,7 +61,7 @@ export default function AutomationPage() {
       if (!res.ok) throw new Error('Toggle failed')
       fetchWorkflows()
     } catch (err) {
-      alert('Failed to toggle status')
+      toast.error('Failed to toggle automation status')
     }
   }
 
@@ -70,7 +72,7 @@ export default function AutomationPage() {
       if (!res.ok) throw new Error('Delete failed')
       fetchWorkflows()
     } catch (err) {
-      alert('Failed to delete')
+      toast.error('Failed to delete automation')
     }
   }
 
@@ -95,9 +97,9 @@ export default function AutomationPage() {
       setShowCreate(false)
       setNewPlan({ name: '', trigger: 'LEAD_CREATED' })
       fetchWorkflows()
-      alert('Automation plan activated successfully!')
+      toast.success('Automation plan activated successfully!')
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error creating plan')
+      toast.error(err instanceof Error ? err.message : 'Error creating automation plan')
     } finally {
       setCreating(false)
     }

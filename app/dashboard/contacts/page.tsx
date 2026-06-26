@@ -6,6 +6,7 @@ import {
   Eye, Edit, Trash2, Download, ArrowUpDown, ChevronLeft,
   ChevronRight, X, Loader2, RefreshCw, AlertCircle,
 } from 'lucide-react'
+import { useToast } from '@/components/toast'
 
 interface Contact {
   id: string
@@ -38,6 +39,7 @@ import { useSession } from 'next-auth/react'
 
 export default function ContactsPage() {
   const { data: session } = useSession()
+  const toast = useToast()
   const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -122,7 +124,7 @@ export default function ContactsPage() {
       if (!res.ok) throw new Error('Failed to delete')
       fetchContacts()
     } catch (err) {
-      alert('Error deleting contact')
+      toast.error('Error deleting contact')
     }
   }
 
@@ -156,7 +158,7 @@ export default function ContactsPage() {
       setShowEditModal(false)
       fetchContacts()
     } catch (err) {
-      alert('Error updating contact')
+      toast.error('Error updating contact')
     } finally {
       setUpdating(false)
     }

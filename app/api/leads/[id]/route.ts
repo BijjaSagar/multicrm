@@ -28,6 +28,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 import { sendWhatsappMessage } from '@/lib/whatsapp'
+import { calculateLeadScore } from '@/lib/lead-automation'
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -84,6 +85,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           console.error('Lead WhatsApp Automation failed:', waError)
         }
       }
+    }
+
+    // Re-calculate lead score after any update
+    try {
+      await calculateLeadScore(id)
+    } catch (scoreErr) {
+      console.error('Lead score recalculation failed:', scoreErr)
     }
 
     return success(lead)

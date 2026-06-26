@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
+import { useToast } from '@/components/toast'
 import {
   Settings,
   User,
@@ -18,6 +19,7 @@ import {
 
 export default function SettingsPage() {
   const { data: session } = useSession()
+  const toast = useToast()
   const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState('profile')
   const [saved, setSaved] = useState(false)
@@ -72,7 +74,7 @@ export default function SettingsPage() {
       setTimeout(() => setSaved(false), 2000)
       fetchSettings()
     } catch (err) {
-      alert('Failed to save settings')
+      toast.error('Failed to save settings')
     } finally {
       setLoading(false)
     }

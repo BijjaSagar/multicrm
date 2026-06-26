@@ -19,6 +19,7 @@ export async function GET() {
       pipelineStages,
       ticketStats,
       monthlyRevenue,
+      leadsByStatus,
     ] = await Promise.all([
       prisma.lead.count({ where: { tenantId } }),
       prisma.contact.count({ where: { tenantId, status: 'ACTIVE' } }),
@@ -66,6 +67,11 @@ export async function GET() {
           },
         },
         _sum: { value: true },
+        _count: { id: true },
+      }),
+      prisma.lead.groupBy({
+        by: ['status'],
+        where: { tenantId },
         _count: { id: true },
       }),
     ])
@@ -132,6 +138,9 @@ export async function GET() {
       })),
       ticketsByPriority: ticketStats,
       submissionTrends,
+      leadsByStatus: Object.fromEntries(
+        leadsByStatus.map((s: any) => [s.status, s._count.id])
+      ),
     })
   } catch (error) {
     return serverError(error)

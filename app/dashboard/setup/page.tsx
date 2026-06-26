@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import {
   Sparkles, Building2, UploadCloud, Users,
   ArrowRight, Check, AlertCircle, Loader2,
-  Lock, Mail, Phone, ShieldCheck
+  Lock, Mail, Phone, ShieldCheck, X, FileText
 } from 'lucide-react'
 
 const SETUP_QUESTIONS: Record<string, { question: string; options: string[] }> = {
@@ -52,6 +52,9 @@ export default function SetupPage() {
   const [teamMemberAdded, setTeamMemberAdded] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [csvFile, setCsvFile] = useState<File | null>(null)
+  const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null)
+  const [isImporting, setIsImporting] = useState(false)
 
   const verticalKey = session?.user?.tenantSettings?.verticalKey || 'GENERAL'
   const verticalName = session?.user?.tenantSettings?.verticalName || 'General Business'
@@ -88,6 +91,24 @@ export default function SetupPage() {
       setError(err instanceof Error ? err.message : 'Failed to add member')
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleImportCSV = async () => {
+    if (!csvFile) return
+    setIsImporting(true)
+    setError('')
+    try {
+      const formData = new FormData()
+      formData.append('file', csvFile)
+      const res = await fetch('/api/leads/import', { method: 'POST', body: formData })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Import failed')
+      setImportResult({ imported: data.imported, skipped: data.skipped })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'CSV import failed')
+    } finally {
+      setIsImporting(false)
     }
   }
 
@@ -164,19 +185,73 @@ export default function SetupPage() {
         <div>
           <h2 style={{ fontSize: '20px', fontWeight: 900, marginBottom: '8px' }}>Import Existing Customer Data</h2>
           <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
-            Upload your CSV files to pre-populate leads, contacts, and custom details.
+            Upload a CSV to bulk-import leads. Required column: <strong>firstName</strong>. Optional: lastName, email, phone, company, source, status, priority, notes.
           </p>
 
-          <div style={{ border: '2px dashed var(--surface-border)', borderRadius: '12px', padding: '40px 20px', textAlign: 'center', background: 'var(--surface-raised)', marginBottom: '32px' }}>
-            <UploadCloud size={36} color="var(--text-muted)" style={{ margin: '0 auto 12px' }} />
-            <div style={{ fontSize: '14px', fontWeight: 700, marginBottom: '4px' }}>Drag and drop your spreadsheet here</div>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Supports .csv files up to 10MB</p>
-            <button className="btn btn-secondary btn-sm" onClick={() => alert('CSV file selector opened')}>Browse Files</button>
-          </div>
+          {importResult ? (
+            <div style={{ padding: '20px', borderRadius: '12px', background: 'rgba(16,185,129,0.04)', border: '1px solid rgba(16,185,129,0.2)', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: '#10B981', fontWeight: 700, fontSize: '15px' }}>
+                <Check size={18} /> Import Complete
+              </div>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                <strong style={{ color: '#10B981' }}>{importResult.imported} records</strong> imported successfully.
+                {importResult.skipped > 0 && <> <strong style={{ color: '#F59E0B' }}>{importResult.skipped} rows</strong> were skipped (duplicates or missing required fields).</>}
+              </p>
+              <button className="btn btn-ghost btn-sm" style={{ marginTop: '10px', fontSize: '12px' }} onClick={() => { setCsvFile(null); setImportResult(null) }}>
+                Import another file
+              </button>
+            </div>
+          ) : (
+            <>
+              <label
+                htmlFor="csv-upload"
+                style={{ display: 'block', border: `2px dashed ${csvFile ? '#6366F1' : 'var(--surface-border)'}`, borderRadius: '12px', padding: '32px 20px', textAlign: 'center', background: csvFile ? 'rgba(99,102,241,0.03)' : 'var(--surface-raised)', marginBottom: '16px', cursor: 'pointer', transition: 'all 150ms' }}
+              >
+                {csvFile ? (
+                  <>
+                    <FileText size={32} color="#6366F1" style={{ margin: '0 auto 8px' }} />
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#6366F1', marginBottom: '4px' }}>{csvFile.name}</div>
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{(csvFile.size / 1024).toFixed(1)} KB — click to change</p>
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud size={36} color="var(--text-muted)" style={{ margin: '0 auto 12px' }} />
+                    <div style={{ fontSize: '14px', fontWeight: 700, marginBottom: '4px' }}>Click to select your CSV file</div>
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Supports .csv files up to 10MB · max 5,000 rows</p>
+                  </>
+                )}
+                <input
+                  id="csv-upload"
+                  type="file"
+                  accept=".csv,text/csv"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0] || null
+                    setCsvFile(f)
+                    setImportResult(null)
+                    setError('')
+                  }}
+                />
+              </label>
+
+              {csvFile && (
+                <button
+                  onClick={handleImportCSV}
+                  disabled={isImporting}
+                  className="btn btn-primary btn-sm"
+                  style={{ width: '100%', marginBottom: '16px', gap: '6px' }}
+                >
+                  {isImporting ? <><Loader2 size={14} className="spinner" /> Importing...</> : <><UploadCloud size={14} /> Import {csvFile.name}</>}
+                </button>
+              )}
+            </>
+          )}
 
           <div style={{ display: 'flex', gap: '12px' }}>
             <button onClick={() => setStep(1)} className="btn btn-ghost" style={{ flex: 1 }}>Back</button>
-            <button onClick={() => setStep(3)} className="btn btn-primary" style={{ flex: 1 }}>Skip for Now</button>
+            <button onClick={() => setStep(3)} className="btn btn-primary" style={{ flex: 1 }}>
+              {importResult ? 'Continue' : 'Skip for Now'}
+            </button>
           </div>
         </div>
       )}

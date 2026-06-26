@@ -7,6 +7,7 @@ import {
   ChevronRight, X, Loader2, RefreshCw, AlertCircle,
 } from 'lucide-react'
 import { useToast } from '@/components/toast'
+import { useConfirm } from '@/components/confirm-modal'
 
 interface Contact {
   id: string
@@ -40,6 +41,7 @@ import { useSession } from 'next-auth/react'
 export default function ContactsPage() {
   const { data: session } = useSession()
   const toast = useToast()
+  const { confirm } = useConfirm()
   const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -118,7 +120,7 @@ export default function ContactsPage() {
 
   const handleDelete = async (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
-    if (!confirm('Are you sure you want to delete this contact? This action cannot be undone.')) return
+    if (!await confirm({ title: 'Delete Contact', message: 'Are you sure you want to delete this contact? This action cannot be undone.', danger: true })) return
     try {
       const res = await fetch(`/api/contacts/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Failed to delete')

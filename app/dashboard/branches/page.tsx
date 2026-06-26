@@ -7,6 +7,7 @@ import {
   Globe, Star,
 } from 'lucide-react'
 import { useToast } from '@/components/toast'
+import { useConfirm } from '@/components/confirm-modal'
 
 interface Branch {
   id: string
@@ -26,6 +27,7 @@ interface Branch {
 
 export default function BranchesPage() {
   const toast = useToast()
+  const { confirm } = useConfirm()
   const [branches, setBranches] = useState<Branch[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -113,7 +115,7 @@ export default function BranchesPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this branch? Associated data will be disconnected or removed.')) return
+    if (!await confirm({ title: 'Delete Branch', message: 'Delete this branch? Associated data will be disconnected or removed.', danger: true })) return
     try {
       const res = await fetch(`/api/branches/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Delete failed')

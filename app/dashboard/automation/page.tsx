@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '@/components/toast'
+import { useConfirm } from '@/components/confirm-modal'
 import {
   Zap, Plus, Trash2, Play, Pause, AlertCircle,
   Clock, ArrowRight, ShieldCheck, Loader2, RefreshCw
@@ -27,6 +28,7 @@ interface Automation {
 
 export default function AutomationPage() {
   const toast = useToast()
+  const { confirm } = useConfirm()
   const [automations, setAutomations] = useState<Automation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -66,7 +68,7 @@ export default function AutomationPage() {
   }
 
   const deleteWorkflow = async (id: string) => {
-    if (!confirm('Delete this automation plan?')) return
+    if (!await confirm({ title: 'Delete Automation', message: 'Delete this automation plan? It will stop running immediately.', danger: true })) return
     try {
       const res = await fetch(`/api/workflows/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Delete failed')

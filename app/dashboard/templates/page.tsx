@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { getVerticalConfig } from '@/lib/vertical-config'
+import { useConfirm } from '@/components/confirm-modal'
 
 interface Template {
   id: string
@@ -22,6 +23,7 @@ interface Template {
 
 export default function TemplatesPage() {
   const { data: session } = useSession()
+  const { confirm } = useConfirm()
   const [templates, setTemplates] = useState<Template[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -120,7 +122,7 @@ export default function TemplatesPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this template?')) return
+    if (!await confirm({ title: 'Delete Template', message: 'Delete this template? This cannot be undone.', danger: true })) return
     await fetch(`/api/templates/${id}`, { method: 'DELETE' })
     fetchTemplates()
   }

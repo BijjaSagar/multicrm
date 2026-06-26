@@ -6,6 +6,7 @@ import {
   LayoutGrid, List, X, TrendingUp, Loader2, RefreshCw,
   AlertCircle, Trash2, FileDown, User,
 } from 'lucide-react'
+import { useConfirm } from '@/components/confirm-modal'
 import Link from 'next/link'
 import { generateQuotationPDF } from '@/lib/pdf-gen'
 
@@ -35,6 +36,7 @@ import { useSession } from 'next-auth/react'
 
 export default function DealsPage() {
   const { data: session } = useSession()
+  const { confirm } = useConfirm()
   const [deals, setDeals] = useState<Deal[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -132,7 +134,7 @@ export default function DealsPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this deal?')) return
+    if (!await confirm({ title: 'Delete Deal', message: 'Delete this deal? This action cannot be undone.', danger: true })) return
     await fetch(`/api/deals/${id}`, { method: 'DELETE' })
     fetchDeals()
   }

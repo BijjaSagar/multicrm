@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useToast } from '@/components/toast'
+import { useConfirm } from '@/components/confirm-modal'
 import {
   Settings,
   Plus,
@@ -36,6 +37,7 @@ const FIELD_TYPES = [
 
 export default function CustomFieldsSettings() {
   const toast = useToast()
+  const { confirm } = useConfirm()
   const [activeTab, setActiveTab] = useState('LEAD')
   const [fields, setFields] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -109,7 +111,7 @@ export default function CustomFieldsSettings() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this field? Data stored in this field will be lost.')) return
+    if (!await confirm({ title: 'Delete Custom Field', message: 'Are you sure? All data stored in this field will be permanently lost.', danger: true })) return
     
     try {
       const res = await fetch(`/api/settings/custom-fields/${id}`, { method: 'DELETE' })

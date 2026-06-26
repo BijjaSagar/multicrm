@@ -37,6 +37,7 @@ import {
 import { getVerticalConfig } from '@/lib/vertical-config'
 import { AiChatWidget } from '@/components/ai-chat-widget'
 import { ToastProvider } from '@/components/toast'
+import { ConfirmProvider } from '@/components/confirm-modal'
 
 // Theme Context
 const ThemeContext = createContext({
@@ -226,6 +227,7 @@ export default function DashboardLayout({
 
   return (
     <ToastProvider>
+    <ConfirmProvider>
     <ThemeContext.Provider value={{ isDark, toggleTheme }}>
       {/* Mobile Overlay */}
       {mobileOpen && (
@@ -591,6 +593,7 @@ export default function DashboardLayout({
       {/* Floating AI Chat Widget */}
       <AiChatWidget />
     </ThemeContext.Provider>
+    </ConfirmProvider>
     </ToastProvider>
   )
 }

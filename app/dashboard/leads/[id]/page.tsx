@@ -12,6 +12,7 @@ import {
 import { DynamicFieldRenderer } from '@/components/dynamic-field-renderer'
 import { useSession } from 'next-auth/react'
 import { getVerticalConfig } from '@/lib/vertical-config'
+import { useConfirm } from '@/components/confirm-modal'
 
 interface Activity {
   id: string
@@ -58,6 +59,7 @@ const typeIcons: Record<string, any> = {
 
 export default function LeadDetailPage() {
   const { data: session } = useSession()
+  const { confirm } = useConfirm()
   const { id } = useParams()
   const router = useRouter()
   const [lead, setLead] = useState<Lead | null>(null)
@@ -173,7 +175,7 @@ export default function LeadDetailPage() {
   }
 
   const handleConvertToDeal = async () => {
-    if (!confirm('Convert this lead into a deal?')) return
+    if (!await confirm({ title: 'Convert to Deal', message: 'Convert this lead into a deal? The lead will be marked as Converted.', confirmLabel: 'Convert', danger: false })) return
     setConverting(true)
     try {
       const res = await fetch(`/api/leads/${id}/convert`, {

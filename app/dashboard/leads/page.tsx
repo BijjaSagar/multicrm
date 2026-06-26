@@ -251,6 +251,8 @@ export default function LeadsPage() {
     isReferral: 'No'
   })
 
+  const [listStatusFilter, setListStatusFilter] = useState('ALL')
+
   // Detect education vertical matching STUDENT_MANAGEMENT module
   const isEducation = useMemo(() => {
     return session?.user?.enabledModules?.includes('STUDENT_MANAGEMENT') || false
@@ -308,6 +310,11 @@ export default function LeadsPage() {
   }, [leads, searchQuery])
 
   const activeStatusConfig = isEducation ? educationStatusConfig : statusConfig
+
+  const tableLeads = useMemo(() => {
+    if (listStatusFilter === 'ALL') return filteredLeads
+    return filteredLeads.filter(l => l.status === listStatusFilter)
+  }, [filteredLeads, listStatusFilter])
 
   const onDragStart = (event: DragStartEvent) => {
     if (session?.user?.role === 'VIEWER') return 
@@ -577,82 +584,221 @@ export default function LeadsPage() {
           </DragOverlay>
         </DndContext>
       ) : (
-        /* High Density Table View */
-        <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 }}>
-          <div className="table-container" style={{ flex: 1, overflowY: 'auto', border: 'none', borderRadius: 0 }}>
-            <table className="table">
-              <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-                <tr>
-                  <th>Lead ID</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Mobile No.</th>
-                  <th>Gender</th>
-                  <th>Course</th>
-                  <th>Specialization</th>
-                  <th>Status</th>
-                  <th>Date Added</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredLeads.length > 0 ? (
-                  filteredLeads.map((lead) => {
-                    const statusVal = lead.status
-                    const statusMeta = activeStatusConfig[statusVal] || { label: statusVal, color: '#64748B' }
-                    const dateStr = new Date(lead.createdAt).toLocaleDateString('en-IN', {
-                      day: '2-digit', month: 'short', year: 'numeric',
-                      hour: '2-digit', minute: '2-digit'
-                    })
-                    
-                    // Extract fields from customFields attached
-                    const salutation = lead.customFields?.['Salutation'] || 'Mr.'
-                    const gender = lead.customFields?.['Gender'] || 'Male'
-                    const course = lead.customFields?.['Course'] || 'PGDM'
-                    const specialization = lead.customFields?.['Specialization'] || 'Marketing Management'
+        /* Redesigned List View */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, overflow: 'hidden' }}>
+
+          {/* Status filter pills */}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setListStatusFilter('ALL')}
+              style={{
+                padding: '5px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
+                border: listStatusFilter === 'ALL' ? 'none' : '1px solid var(--surface-border)',
+                background: listStatusFilter === 'ALL' ? 'var(--primary-500)' : 'var(--surface-raised)',
+                color: listStatusFilter === 'ALL' ? 'white' : 'var(--text-secondary)',
+                transition: 'all 150ms',
+              }}
+            >
+              All ({filteredLeads.length})
+            </button>
+            {Object.entries(activeStatusConfig).map(([key, cfg]) => {
+              const count = filteredLeads.filter(l => l.status === key).length
+              if (count === 0) return null
+              const active = listStatusFilter === key
+              return (
+                <button key={key} onClick={() => setListStatusFilter(key)} style={{
+                  padding: '5px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
+                  border: active ? 'none' : `1px solid ${cfg.color}40`,
+                  background: active ? cfg.color : `${cfg.color}10`,
+                  color: active ? 'white' : cfg.color,
+                  transition: 'all 150ms',
+                }}>
+                  {cfg.label} <span style={{ opacity: 0.8 }}>({count})</span>
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 }}>
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'var(--surface-raised)', borderBottom: '2px solid var(--surface-border)' }}>
+                    {['Student', 'Contact', 'Gender', 'Course', 'Specialization', 'Score', 'Status', 'Date Added', 'Actions'].map(h => (
+                      <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', whiteSpace: 'nowrap', position: 'sticky', top: 0, background: 'var(--surface-raised)', zIndex: 10 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {tableLeads.length > 0 ? tableLeads.map((lead, i) => {
+                    const statusMeta = activeStatusConfig[lead.status] || { label: lead.status, color: '#64748B' }
+                    const salutation = lead.customFields?.['Salutation'] || ''
+                    const gender = lead.customFields?.['Gender'] || (isEducation ? 'Male' : '')
+                    const course = lead.customFields?.['Course'] || (isEducation ? 'PGDM' : '')
+                    const specialization = lead.customFields?.['Specialization'] || ''
+                    const hue = (lead.firstName.charCodeAt(0) * 15) % 360
+                    const score = lead.score || 0
+                    const scoreColor = score >= 80 ? '#10B981' : score >= 50 ? '#F59E0B' : '#EF4444'
+                    const dateStr = new Date(lead.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                    const timeStr = new Date(lead.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
 
                     return (
-                      <tr key={lead.id}>
-                        <td style={{ fontWeight: 700 }}>
-                          <Link href={`/dashboard/leads/${lead.id}`} style={{ color: 'var(--primary-600)', textDecoration: 'underline' }} title={lead.id}>
-                            {lead.id.substring(0, 8)}...
+                      <tr key={lead.id}
+                        style={{ borderBottom: '1px solid var(--surface-border)', transition: 'background 120ms', cursor: 'pointer' }}
+                        onMouseOver={e => (e.currentTarget.style.background = 'var(--surface-raised)')}
+                        onMouseOut={e => (e.currentTarget.style.background = '')}
+                      >
+                        {/* Student */}
+                        <td style={{ padding: '12px 16px' }}>
+                          <Link href={`/dashboard/leads/${lead.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{
+                              width: '38px', height: '38px', borderRadius: '10px', flexShrink: 0,
+                              background: `linear-gradient(135deg, hsl(${hue},65%,55%), hsl(${(hue+40)%360},65%,45%))`,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              color: 'white', fontSize: '13px', fontWeight: 700,
+                            }}>
+                              {lead.firstName[0]}{lead.lastName[0]}
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--text-primary)' }}>
+                                {salutation && `${salutation} `}{lead.firstName} {lead.lastName}
+                              </div>
+                              <div style={{ fontSize: '10px', color: 'var(--primary-500)', fontFamily: 'monospace', marginTop: '2px' }}>
+                                #{lead.id.substring(0, 8)}
+                              </div>
+                            </div>
                           </Link>
                         </td>
-                        <td style={{ fontWeight: 600 }}>{salutation} {lead.firstName} {lead.lastName}</td>
-                        <td style={{ color: 'var(--text-secondary)' }}>{lead.email || '—'}</td>
-                        <td>{lead.phone || '—'}</td>
-                        <td>{gender}</td>
-                        <td style={{ fontWeight: 700, color: 'var(--primary-600)' }}>{course}</td>
-                        <td style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{specialization}</td>
-                        <td>
-                          <span style={{ 
-                            padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600,
-                            background: `${statusMeta.color}15`, color: statusMeta.color,
-                            whiteSpace: 'nowrap'
+
+                        {/* Contact */}
+                        <td style={{ padding: '12px 16px' }}>
+                          {lead.email && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '3px' }}>
+                              <Mail size={11} />
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '150px' }}>{lead.email}</span>
+                            </div>
+                          )}
+                          {lead.phone && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                              <Phone size={11} /> {lead.phone}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Gender */}
+                        <td style={{ padding: '12px 16px' }}>
+                          {gender ? (
+                            <span style={{
+                              padding: '3px 9px', borderRadius: '6px', fontSize: '11px', fontWeight: 700,
+                              background: gender === 'Female' ? 'rgba(236,72,153,.12)' : gender === 'Male' ? 'rgba(59,130,246,.12)' : 'rgba(107,114,128,.12)',
+                              color: gender === 'Female' ? '#EC4899' : gender === 'Male' ? '#3B82F6' : '#6B7280',
+                            }}>{gender}</span>
+                          ) : <span style={{ color: 'var(--text-muted)' }}>—</span>}
+                        </td>
+
+                        {/* Course */}
+                        <td style={{ padding: '12px 16px' }}>
+                          {course ? (
+                            <span style={{ fontWeight: 700, fontSize: '13px', color: 'var(--primary-600)' }}>{course}</span>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{lead.company || '—'}</span>
+                          )}
+                        </td>
+
+                        {/* Specialization */}
+                        <td style={{ padding: '12px 16px', maxWidth: '200px' }}>
+                          <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {specialization || lead.jobTitle || '—'}
+                          </span>
+                        </td>
+
+                        {/* Score ring */}
+                        <td style={{ padding: '12px 16px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{
+                              width: '32px', height: '32px', borderRadius: '50%',
+                              background: `conic-gradient(${scoreColor} ${score * 3.6}deg, var(--surface-border) 0deg)`,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            }}>
+                              <div style={{
+                                width: '22px', height: '22px', borderRadius: '50%',
+                                background: 'var(--surface-raised)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: '9px', fontWeight: 800, color: scoreColor,
+                              }}>{score}</div>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Status badge */}
+                        <td style={{ padding: '12px 16px' }}>
+                          <span style={{
+                            padding: '5px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 700,
+                            background: `${statusMeta.color}18`, color: statusMeta.color,
+                            border: `1px solid ${statusMeta.color}35`,
+                            whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '5px',
                           }}>
+                            <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: statusMeta.color, flexShrink: 0 }} />
                             {statusMeta.label}
                           </span>
                         </td>
-                        <td style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{dateStr}</td>
-                        <td>
-                          <div style={{ display: 'flex', gap: '8px' }}>
+
+                        {/* Date */}
+                        <td style={{ padding: '12px 16px' }}>
+                          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>{dateStr}</div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{timeStr}</div>
+                        </td>
+
+                        {/* Actions */}
+                        <td style={{ padding: '12px 16px' }}>
+                          <div style={{ display: 'flex', gap: '4px' }}>
                             <Link href={`/dashboard/leads/${lead.id}`}>
-                              <button className="btn btn-secondary btn-icon btn-sm"><Eye size={12} /></button>
+                              <button className="btn btn-ghost btn-icon btn-sm" title="View"><Eye size={13} /></button>
                             </Link>
+                            {lead.phone && (
+                              <a href={`https://wa.me/91${lead.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">
+                                <button className="btn btn-ghost btn-icon btn-sm" title="WhatsApp" style={{ color: '#25D366' }}>
+                                  <Phone size={13} />
+                                </button>
+                              </a>
+                            )}
                           </div>
                         </td>
                       </tr>
                     )
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={10} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-                      No matching leads found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  }) : (
+                    <tr>
+                      <td colSpan={9} style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
+                        <UserPlus size={40} style={{ margin: '0 auto 12px', opacity: 0.2, display: 'block' }} />
+                        <p style={{ fontWeight: 600, fontSize: '15px' }}>No leads found</p>
+                        <p style={{ fontSize: '13px', marginTop: '6px' }}>Try adjusting the search or status filter above</p>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Table footer */}
+            {tableLeads.length > 0 && (
+              <div style={{ padding: '12px 20px', borderTop: '1px solid var(--surface-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface-raised)', flexWrap: 'wrap', gap: '8px' }}>
+                <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                  Showing <strong style={{ color: 'var(--text-primary)' }}>{tableLeads.length}</strong> of <strong style={{ color: 'var(--text-primary)' }}>{filteredLeads.length}</strong> leads
+                </span>
+                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                  {Object.entries(activeStatusConfig).map(([key, cfg]) => {
+                    const count = filteredLeads.filter(l => l.status === key).length
+                    if (count === 0) return null
+                    return (
+                      <span key={key} style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: cfg.color }} />
+                        {cfg.label}: <strong style={{ color: 'var(--text-primary)' }}>{count}</strong>
+                      </span>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

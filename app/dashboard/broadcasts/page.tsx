@@ -94,27 +94,38 @@ export default function BroadcastsPage() {
         <button className="btn btn-primary" onClick={() => { setStep(1); setShowCreateModal(true) }}><Plus size={16} /> New Broadcast</button>
       </div>
 
-      {/* Stats Overview */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '32px' }}>
-         {[
-           { label: 'Total Sent', value: '45,280', icon: Send, color: 'var(--primary-500)' },
-           { label: 'Avg Open Rate', value: '82%', icon: BarChart3, color: '#10B981' },
-           { label: 'Scheduled', value: '12', icon: Calendar, color: '#3B82F6' },
-           { label: 'Est. Delivery', value: 'Instant', icon: Clock, color: '#8B5CF6' },
-         ].map((stat, i) => (
-           <div key={i} className="card animate-fade-in-up" style={{ padding: '20px', animationDelay: `${i * 100}ms` }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                 <div>
-                   <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>{stat.label}</div>
-                   <div style={{ fontSize: '24px', fontWeight: 800 }}>{stat.value}</div>
-                 </div>
-                 <div style={{ padding: '8px', borderRadius: '10px', background: `${stat.color}10`, color: stat.color }}>
+      {/* Stats Overview — computed from real data */}
+      {(() => {
+        const totalSent = broadcasts.reduce((s, b) => s + (b.sentCount || 0), 0)
+        const completedWithOpen = broadcasts.filter(b => b.sentCount > 0 && b.openCount)
+        const avgOpenRate = completedWithOpen.length > 0
+          ? Math.round(completedWithOpen.reduce((s, b) => s + ((b.openCount || 0) / b.sentCount) * 100, 0) / completedWithOpen.length)
+          : null
+        const scheduled = broadcasts.filter(b => b.status === 'SCHEDULED').length
+        const stats = [
+          { label: 'Total Sent', value: totalSent.toLocaleString('en-IN'), icon: Send, color: 'var(--primary-500)' },
+          { label: 'Avg Open Rate', value: avgOpenRate !== null ? `${avgOpenRate}%` : 'N/A', icon: BarChart3, color: '#10B981' },
+          { label: 'Scheduled', value: String(scheduled), icon: Calendar, color: '#3B82F6' },
+          { label: 'Total Campaigns', value: String(broadcasts.length), icon: Clock, color: '#8B5CF6' },
+        ]
+        return (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '32px' }}>
+            {stats.map((stat, i) => (
+              <div key={i} className="card animate-fade-in-up" style={{ padding: '20px', animationDelay: `${i * 100}ms`, animationFillMode: 'backwards' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>{stat.label}</div>
+                    <div style={{ fontSize: '24px', fontWeight: 800 }}>{stat.value}</div>
+                  </div>
+                  <div style={{ padding: '8px', borderRadius: '10px', background: `${stat.color}10`, color: stat.color }}>
                     <stat.icon size={18} />
-                 </div>
+                  </div>
+                </div>
               </div>
-           </div>
-         ))}
-      </div>
+            ))}
+          </div>
+        )
+      })()}
 
       {/* Main Content */}
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -147,6 +158,15 @@ export default function BroadcastsPage() {
                 </tr>
               </thead>
               <tbody>
+                {broadcasts.length === 0 && !loading && (
+                  <tr>
+                    <td colSpan={7} style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
+                      <Send size={40} style={{ margin: '0 auto 12px', opacity: 0.2, display: 'block' }} />
+                      <p style={{ fontWeight: 600, fontSize: '15px' }}>No broadcasts yet</p>
+                      <p style={{ fontSize: '13px', marginTop: '6px' }}>Create your first campaign to reach your leads at scale</p>
+                    </td>
+                  </tr>
+                )}
                  {broadcasts.map((b) => (
                    <tr key={b.id}>
                      <td>

@@ -4,8 +4,11 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   Users, Search, Mail, Phone, Shield, Plus,
   Loader2, RefreshCw, AlertCircle, Building2,
-  X, Check, Copy, Eye, EyeOff, Trash2
+  X, Check, Copy, Eye, EyeOff, Trash2, Edit,
 } from 'lucide-react'
+import { useToast } from '@/components/toast'
+import { useConfirm } from '@/components/confirm-modal'
+import { useSession } from 'next-auth/react'
 
 interface TeamMember {
   id: string
@@ -43,6 +46,9 @@ const ROLES = [
 ]
 
 export default function TeamPage() {
+  const { data: session } = useSession()
+  const toast = useToast()
+  const { confirm } = useConfirm()
   const [members, setMembers] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -56,6 +62,9 @@ export default function TeamPage() {
   const [inviteForm, setInviteForm] = useState({
     firstName: '', lastName: '', email: '', phone: '', role: 'SALES_REP', password: '', branchId: ''
   })
+  const [editingMember, setEditingMember] = useState<TeamMember | null>(null)
+  const [editForm, setEditForm] = useState({ firstName: '', lastName: '', phone: '', role: '', status: '', branchId: '' })
+  const [updating, setUpdating] = useState(false)
 
   const fetchTeam = useCallback(async () => {
     setLoading(true)
@@ -113,6 +122,49 @@ export default function TeamPage() {
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
+
+  const openEdit = (member: TeamMember) => {
+    setEditingMember(member)
+    setEditForm({
+      firstName: member.firstName, lastName: member.lastName,
+      phone: member.phone || '', role: member.role, status: member.status,
+      branchId: member.branch?.id || '',
+    })
+  }
+
+  const handleUpdate = async () => {
+    if (!editingMember) return
+    setUpdating(true)
+    try {
+      const res = await fetch(`/api/team/${editingMember.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm),
+      })
+      if (!res.ok) throw new Error('Update failed')
+      toast.success('Team member updated')
+      setEditingMember(null)
+      fetchTeam()
+    } catch {
+      toast.error('Failed to update member')
+    } finally {
+      setUpdating(false)
+    }
+  }
+
+  const handleDelete = async (member: TeamMember) => {
+    if (!await confirm({ title: 'Deactivate Member', message: `Deactivate ${member.firstName} ${member.lastName}? They will lose access immediately.`, danger: true, confirmLabel: 'Deactivate' })) return
+    try {
+      const res = await fetch(`/api/team/${member.id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      toast.success('Member deactivated')
+      fetchTeam()
+    } catch {
+      toast.error('Failed to deactivate member')
+    }
+  }
+
+  const isAdmin = session?.user?.role === 'SUPER_ADMIN' || session?.user?.role === 'TENANT_ADMIN'
 
   const active = members.filter(m => m.status === 'ACTIVE')
 
@@ -232,6 +284,65 @@ export default function TeamPage() {
         </div>
       )}
 
+      {/* Edit Member Modal */}
+      {editingMember && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div className="card animate-fade-in-up" style={{ padding: '28px', maxWidth: '500px', width: '100%', position: 'relative' }}>
+            <button onClick={() => setEditingMember(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={18} /></button>
+            <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '20px' }}>Edit Member — {editingMember.firstName} {editingMember.lastName}</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label className="label">First Name</label>
+                  <input className="input" value={editForm.firstName} onChange={e => setEditForm(f => ({ ...f, firstName: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="label">Last Name</label>
+                  <input className="input" value={editForm.lastName} onChange={e => setEditForm(f => ({ ...f, lastName: e.target.value }))} />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label className="label">Phone</label>
+                  <input className="input" value={editForm.phone} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="label">Role</label>
+                  <select className="input" value={editForm.role} onChange={e => setEditForm(f => ({ ...f, role: e.target.value }))}>
+                    {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label className="label">Status</label>
+                  <select className="input" value={editForm.status} onChange={e => setEditForm(f => ({ ...f, status: e.target.value }))}>
+                    <option value="ACTIVE">Active</option>
+                    <option value="INACTIVE">Inactive</option>
+                    <option value="SUSPENDED">Suspended</option>
+                  </select>
+                </div>
+                {branches.length > 0 && (
+                  <div>
+                    <label className="label">Branch</label>
+                    <select className="input" value={editForm.branchId} onChange={e => setEditForm(f => ({ ...f, branchId: e.target.value }))}>
+                      <option value="">No Branch</option>
+                      {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    </select>
+                  </div>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', paddingTop: '8px' }}>
+                <button className="btn btn-secondary" onClick={() => setEditingMember(null)}>Cancel</button>
+                <button className="btn btn-primary" onClick={handleUpdate} disabled={updating}>
+                  {updating ? <><Loader2 size={14} className="spinner" /> Saving...</> : <><Check size={14} /> Save Changes</>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Search */}
       <div className="card" style={{ padding: '16px', marginBottom: '20px' }}>
         <div style={{ position: 'relative', maxWidth: '360px' }}>
@@ -289,6 +400,17 @@ export default function TeamPage() {
               {member.lastLoginAt && (
                 <div style={{ marginTop: '12px', fontSize: '11px', color: 'var(--text-muted)' }}>
                   Last login: {new Date(member.lastLoginAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                </div>
+              )}
+
+              {isAdmin && member.id !== session?.user?.id && (
+                <div style={{ display: 'flex', gap: '8px', marginTop: '14px', paddingTop: '14px', borderTop: '1px solid var(--surface-border)' }}>
+                  <button className="btn btn-secondary btn-sm" style={{ flex: 1 }} onClick={() => openEdit(member)}>
+                    <Edit size={13} /> Edit
+                  </button>
+                  <button className="btn btn-ghost btn-sm" style={{ flex: 1, color: '#EF4444' }} onClick={() => handleDelete(member)}>
+                    <Trash2 size={13} /> Deactivate
+                  </button>
                 </div>
               )}
             </div>
